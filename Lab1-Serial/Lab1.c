@@ -36,33 +36,21 @@
  */
 int main(void)
 {
-    USB_SetupHardware();
-    GlobalInterruptEnable();
-   // Message_Handling_Init(); // initialize message handling
+   USB_SetupHardware();
+   GlobalInterruptEnable();
+   Message_Handling_Init(); // initialize message handling
 
-   // while( true )
-   // {
-   //     USB_Upkeep_Task();
+   while( true )
+   {
+  	 USB_Upkeep_Task();
 
-   //     USB_Echo_Task();// you'll want to remove this once you get your serial sorted
-   //     //Message_Handling_Task();
+   	USB_Echo_Task();// you'll want to remove this once you get your serial sorted
+	//Message_Handling_Task();
 
-   //     // Below here you'll process state-machine flags.
-   //     while( true ) )
-   //     {
-   //             // re initialzie your stuff...
-   //         if ( MSG_FLAG_Execute( &ms_restart) ) {
-   //             // do the restart task
-   //         }
-   //         if ( MSG_FLAG_Execute( &mf_loop_timer ) {
-   //             // loop?
-   //         }
-   //         if ( MSG_FLAG_Execute( &mf_time_float_send ) {
-   //             // send float
-   //         }
-   //         if ( MSG_FLAG_Execute( &mf_send_time ) {
-   //             // indicates if the system should send current time
-   //         }
-   //     }
-   // }
+   	// Below here you'll process state-machine flags.
+        if ( MSG_FLAG_Execute( &mf_restart ) ) {
+		Message_Handling_Init();       		 
+		// re initialzie your stuff...
+        }   
+   }
 }

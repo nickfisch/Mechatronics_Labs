@@ -51,7 +51,9 @@ bool MSG_FLAG_Execute( MSG_FLAG_t* p_flag)
     // THIS FUNCTION WILL BE MOST USEFUL FORM LAB 2 ON.
     // What is the logic to indicate an action should be executed?
     // For Lab 1, ignore the timing part.
-    return false;
+    
+    if ( p_flag->active ) return true;
+    else  return false;
 }
 
 
@@ -68,7 +70,7 @@ void Message_Handling_Init()
     MSG_FLAG_Init( &mf_restart ); // needs to be initialized to the default values.
     return;
 }
- * Function Message_Handler processes USB messages as necessary and sets status flags to control the flow of the program.
+/** Function Message_Handler processes USB messages as necessary and sets status flags to control the flow of the program.
  * It returns true unless the program receives a reset message.
  * @return
  */
@@ -80,10 +82,7 @@ void Message_Handling_Task()
     // If it just is a USB thing, do it here, if it requires other hardware, do it in the main and
     // set a flag to have it done here.
 
-    // Check to see if their is data in waiting
-    if( !usb_msg_length() )
-        return; // nothing to process...
-
+    // Check to see if their is data in waiting if( !usb_msg_length() ) return; // nothing to process...
     // Get Your command designator without removal so if their are not enough bytes yet, the command persists
     char command = usb_msg_peek();
 

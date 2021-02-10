@@ -52,7 +52,7 @@ MSG_FLAG_t mf_send_time;     ///<-- Indicates if the system should send the curr
  * in the main loop both because its active and because its time.
  * @return [bool] True for execute action, False for skip action
  */
-bool MSG_FLAG_Execute( MSG_FLAG_t* );
+bool MSG_FLAG_Execute( MSG_FLAG_t* p_flag);
 
 /**
  * Function Message_Handling_Init initializes the message handling and all associated state flags and data to their default
