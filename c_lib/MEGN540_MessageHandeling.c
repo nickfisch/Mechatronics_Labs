@@ -68,8 +68,6 @@ void Message_Handling_Init()
     MSG_FLAG_Init( &mf_restart ); // needs to be initialized to the default values.
     return;
 }
-
-/**
  * Function Message_Handler processes USB messages as necessary and sets status flags to control the flow of the program.
  * It returns true unless the program receives a reset message.
  * @return
