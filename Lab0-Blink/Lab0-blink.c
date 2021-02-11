@@ -52,7 +52,8 @@ void blink_morse_str(char* str, uint16_t dot_length_ms)
     //
     // END FUNCTION
     uint8_t c = 0;
-    do {
+    do
+    {
         blink_morse_char(str[c],dot_length_ms);
         c += 1;
     }while (&str[c] != NULL && c < 255);

@@ -364,8 +364,8 @@ void usb_send_str(char* p_str)
 	p_str++;
     } 
     rb_push_back_C(&_usb_send_buffer, 0);
-    char* format = p_str;
-    rb_push_back_C(&_usb_send_buffer, &format);
+    //char* format = p_str;
+    //rb_push_back_C(&_usb_send_buffer, &format);
 }
 
 /**
