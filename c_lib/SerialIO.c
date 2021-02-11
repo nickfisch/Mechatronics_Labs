@@ -84,6 +84,8 @@ void USB_Upkeep_Task()
 
     // *** MEGN540  ***
     // Get next byte from the USB hardware, send next byte to the USB hardware
+    usb_read_next_byte();
+    usb_write_next_byte();
 }
 
 /** Configures the board hardware and chip peripherals for the demo's functionality. */
@@ -245,6 +247,7 @@ void usb_read_next_byte()
     // will need to adjust to make it non blocking. You'll need to dig into the library to understand
     // how the function above is working then interact at a slightly lower level, but still higher than
     // register level.
+    rb_push_back_C(_usb_receive_buffer);
 }
 
 /**
