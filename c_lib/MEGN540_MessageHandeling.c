@@ -132,6 +132,7 @@ void Message_Handling_Task()
             if( usb_msg_length() >= MEGN540_Message_Len('~') )
             {
                 //then process your reset by setting the mf_restart flag
+                mf_restart.active = true;
             }
             break;
         default:
