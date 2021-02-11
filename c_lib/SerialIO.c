@@ -57,11 +57,12 @@
  */
 
 #include "SerialIO.h"
+#include "../c_lib/Ring_Buffer.h"
 
 // *** MEGN540  ***
 // Ring Buffer Objects
-static struct RingBuffer_C _usb_receive_buffer;
-static struct RingBuffer_C _usb_send_buffer;
+static struct Ring_Buffer_C _usb_receive_buffer;
+static struct Ring_Buffer_C _usb_send_buffer;
 
 
 /** Contains the current baud rate and other settings of the first virtual serial port. While this demo does not use
@@ -84,6 +85,8 @@ void USB_Upkeep_Task()
 
     // *** MEGN540  ***
     // Get next byte from the USB hardware, send next byte to the USB hardware
+    usb_read_next_byte();
+    usb_write_next_byte();
 }
 
 /** Configures the board hardware and chip peripherals for the demo's functionality. */
@@ -103,6 +106,8 @@ void USB_SetupHardware(void)
 
 	// *** MEGN540  ***
 	// INITIALIZE RING BUFFERS AND OTHER DATA
+	rb_initialize_C(&_usb_receive_buffer);
+	rb_initialize_C(&_usb_send_buffer);
 }
 
 /** Event handler for the USB_Connect event. This indicates that the device is enumerating via the status LEDs and
@@ -245,6 +250,31 @@ void usb_read_next_byte()
     // will need to adjust to make it non blocking. You'll need to dig into the library to understand
     // how the function above is working then interact at a slightly lower level, but still higher than
     // register level.
+    
+    /* Device must be connected and configured for the task to run */
+    if (USB_DeviceState != DEVICE_STATE_Configured)
+	return;
+
+    /* Select the Serial Rx Endpoint */
+    Endpoint_SelectEndpoint(CDC_RX_EPADDR);
+    
+    /* Check to see if any data has been received */
+    if (Endpoint_IsOUTReceived())
+    {
+	    /* Remember how large the incoming packet is */
+	    uint16_t DataLength = Endpoint_BytesInEndpoint();
+	    
+	    
+	    /* Read in the incoming packet into the buffer */
+	    for ( uint8_t i = 0; i < DataLength; i++) {
+		rb_push_back_C(&_usb_receive_buffer, Endpoint_Read_8());
+	    }
+	    
+	    /* Finalize the stream transfer to send the last packet */
+	    if (Endpoint_BytesInEndpoint() == 0) {
+		Endpoint_ClearOUT();
+	    }
+    }
 }
 
 /**
@@ -258,6 +288,23 @@ void usb_write_next_byte()
     // will need to adjust to make it non blocking. You'll need to dig into the library to understand
     // how the function above is working then interact at a slightly lower level, but still higher than
     // register level.
+    
+    /* Device must be connected and configured for the task to run */
+    if (USB_DeviceState != DEVICE_STATE_Configured)
+	return;
+
+    /* Select the Serial Tx Endpoint */
+    Endpoint_SelectEndpoint(CDC_TX_EPADDR);
+
+    /* Check to see if any data has been received */
+    if (rb_length_C(&_usb_send_buffer) != 0 && Endpoint_IsINReady())
+    {
+	    /* Write the received data to the endpoint */
+	    Endpoint_Write_8(rb_pop_front_C(&_usb_send_buffer));
+
+	    /* Finalize the stream transfer to send the last packet */
+	    Endpoint_ClearIN();
+    }
 }
 
 /**
@@ -268,6 +315,7 @@ void usb_send_byte(uint8_t byte)
 {
     // *** MEGN540  ***
     // YOUR CODE HERE
+    rb_push_back_C(&_usb_send_buffer, byte);
 }
 
 /**
@@ -279,6 +327,10 @@ void usb_send_data(void* p_data, uint8_t data_len)
 {
     // *** MEGN540  ***
     // YOUR CODE HERE
+    char* data = p_data;
+    for (uint8_t i = 0; i < data_len; i++){
+	rb_push_back_C(&_usb_send_buffer, data[i]);
+    }
 }
 
 /**
@@ -289,6 +341,13 @@ void usb_send_str(char* p_str)
 {
     // *** MEGN540  ***
     // YOUR CODE HERE. Remember c-srtings are null terminated.
+    while (*p_str != 0){
+	rb_push_back_C(&_usb_send_buffer, *p_str);
+	p_str++;
+    } 
+    rb_push_back_C(&_usb_send_buffer, 0);
+    //char* format = p_str;
+    //rb_push_back_C(&_usb_send_buffer, &format);
 }
 
 /**
@@ -323,6 +382,12 @@ void usb_send_msg(char* format, char cmd, void* p_data, uint8_t data_len )
     //      usb_send_byte <-- cmd
     //      usb_send_data <-- p_data
     // FUNCTION END
+    //uint8_t format_length = strlen(format)+1;
+    uint8_t total = 1 + strlen(format) + data_len;
+    usb_send_byte(total);
+    usb_send_str(format);
+    usb_send_byte(cmd);
+    usb_send_data(p_data, data_len);
 }
 
 /**
@@ -333,7 +398,7 @@ uint8_t usb_msg_length()
 {
     // *** MEGN540  ***
     // YOUR CODE HERE
-    return 0;
+    return rb_length_C(&_usb_receive_buffer);
 }
 
 /**
@@ -344,7 +409,7 @@ uint8_t usb_msg_peek()
 {
     // *** MEGN540  ***
     // YOUR CODE HERE
-    return 0;
+    return rb_get_C( &_usb_receive_buffer, 0);
 }
 
 /**
@@ -355,7 +420,7 @@ uint8_t usb_msg_get()
 {
     // *** MEGN540  ***
     // YOUR CODE HERE
-    return 0;
+    return rb_pop_front_C(&_usb_receive_buffer);
 }
 
 /**
@@ -371,7 +436,14 @@ bool usb_msg_read_into(void* p_obj, uint8_t data_len)
 {
     // *** MEGN540  ***
     //YOUR CODE HERE
-    return false;
+    if (rb_length_C(&_usb_receive_buffer) < data_len){
+	return false;
+    }
+    char* data = p_obj;
+    for (uint8_t i=0; i<data_len; i++){
+	data[i] = rb_pop_front_C(&_usb_receive_buffer);
+    }
+    return true;
 }
 
 /**
@@ -382,5 +454,6 @@ void usb_flush_input_buffer()
 {
     // *** MEGN540  ***
     // YOUR CODE HERE
+    
 }
 
