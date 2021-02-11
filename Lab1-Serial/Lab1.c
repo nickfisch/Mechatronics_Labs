@@ -29,6 +29,7 @@
 */
 
 #include "../c_lib/SerialIO.h"
+#include "../c_lib/Ring_Buffer.h"
 #include "../c_lib/MEGN540_MessageHandeling.h"
 
 /** Main program entry point. This routine configures the hardware required by the application, then
@@ -43,7 +44,7 @@ int main(void)
     while( true )
     {
         USB_Upkeep_Task();
-
+        
         //USB_Echo_Task();// you'll want to remove this once you get your serial sorted
         Message_Handling_Task();
 
@@ -51,6 +52,7 @@ int main(void)
         if( MSG_FLAG_Execute( &mf_restart ) )
         {
             // re initialzie your stuff...
+            main();
         }
     }
 }

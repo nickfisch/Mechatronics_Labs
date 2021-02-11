@@ -30,6 +30,7 @@
 
 #define F_CPU 16000000
 #include "led_interface.h"
+#include <stddef.h>
 
 /**
  * Function blink_string takes a c-string and blinks the morse code corresponding to the characters provided.
@@ -50,6 +51,11 @@ void blink_morse_str(char* str, uint16_t dot_length_ms)
     // WHILE: str[counter] is not null (0) and counter is < 255 (it's always good to work with an infinite-loop net)
     //
     // END FUNCTION
+    uint8_t c = 0;
+    do {
+        blink_morse_char(str[c],dot_length_ms);
+        c += 1;
+    }while (&str[c] != NULL && c < 255);
 }
 
 int main()
