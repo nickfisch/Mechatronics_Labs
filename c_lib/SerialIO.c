@@ -85,6 +85,9 @@ void USB_Upkeep_Task()
 
     // *** MEGN540  ***
     // Get next byte from the USB hardware, send next byte to the USB hardware
+    if(USB_DeviceState != DEVICE_STATE_Configured){
+	return;
+    }
     usb_read_next_byte();
     usb_write_next_byte();
 }
@@ -359,13 +362,12 @@ void usb_send_str(char* p_str)
 {
     // *** MEGN540  ***
     // YOUR CODE HERE. Remember c-srtings are null terminated.
+    //rb_push_back_C(&_usb_send_buffer, *p_str);
     while (*p_str != 0){
 	rb_push_back_C(&_usb_send_buffer, *p_str);
 	p_str++;
     } 
     rb_push_back_C(&_usb_send_buffer, 0);
-    //char* format = p_str;
-    //rb_push_back_C(&_usb_send_buffer, &format);
 }
 
 /**
@@ -401,7 +403,7 @@ void usb_send_msg(char* format, char cmd, void* p_data, uint8_t data_len )
     //      usb_send_data <-- p_data
     // FUNCTION END
     //uint8_t format_length = strlen(format)+1;
-    uint8_t total = 1 + strlen(format) + data_len;
+    uint8_t total = 2 + strlen(format) + data_len;
     usb_send_byte(total);
     usb_send_str(format);
     usb_send_byte(cmd);
