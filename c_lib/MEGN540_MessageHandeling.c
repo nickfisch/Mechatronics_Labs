@@ -192,8 +192,15 @@ void Message_Handling_Task()
                 mf_restart.active = true;
             }
             break;
+        case 't':
+            //float timeVal = GetTimeSec();
+            //usb_send_msg("cb", command, timeVal, sizeof(timeVal));
+            break;
+        case 'T':
+            break;
         default:
             // What to do if you dont recognize the command character
+            usb_send_byte('?');
             break;
     }
     
