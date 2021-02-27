@@ -99,11 +99,10 @@ Time_t GetTime()
 {
     // *** MEGN540 Lab 2 ***
     // YOUR CODE HERE
-    Time_t time ={
-                    .millisec = _count_ms,
-                    .microsec = 0 // YOU NEED TO REPLACE THIS WITH A CALL TO THE TIMER0 REGISTER AND MULTIPLY APPROPRIATELY
-                 };
-
+    Time_t time;
+    time.millisec = _count_ms;
+    // timer0 value increments every 4 microseconds, so multiply by 4
+    time.microsec = TCNT0*4;    // YOU NEED TO REPLACE THIS WITH A CALL TO THE TIMER0 REGISTER AND MULTIPLY APPROPRIATELY
     return time;
 }
 
@@ -120,7 +119,7 @@ uint16_t GetMicro()
 {
     // *** MEGN540 Lab 2 ***
     // YOUR CODE HERE
-    return 0 ;// YOU NEED TO REPLACE THIS WITH A CALL TO THE TIMER0 REGISTER AND MULTIPLY APPROPRIATELY
+    return TCNT0*4;	// YOU NEED TO REPLACE THIS WITH A CALL TO THE TIMER0 REGISTER AND MULTIPLY APPROPRIATELY
 }
 
 
@@ -133,7 +132,7 @@ float  SecondsSince(const Time_t* time_start_p )
 {
     // *** MEGN540 Lab 2 ***
     // YOUR CODE HERE
-    float delta_time = 0;
+    float delta_time = GetMilli() - time_start_p->microsec + (GetMicro() - time_start_p->millisec)/1000 ;
     return delta_time;
 }
 
@@ -145,7 +144,8 @@ float  SecondsSince(const Time_t* time_start_p )
     // *** MEGN540 Lab 2 ***
     // YOUR CODE HERE
     // YOU NEED TO RESET THE Timer0 Value to 0 again!
-
+    TCNT0 = 0;
+    
     // take care of upticks of both our internal and external variables.
     _count_ms ++;
 
