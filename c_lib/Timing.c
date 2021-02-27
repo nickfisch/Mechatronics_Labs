@@ -54,18 +54,27 @@ void SetupTimer0()
     // *** MEGN540 Lab 2 ***
     // YOUR CODE HERE
     // Enable timing, setup prescalers, etc.
-    
+   
+    TCNT0 = 0;	 // set timer value to 0
+
+    // WGM02 = 2 to clear the timer on compare match 
     TCCR0A |= (0 << WGM00);
     TCCR0A |= (1 << WGM01);
-    TCCR0A |= (0 << WGM02);
+    TCCR0B |= (0 << WGM02);	// needs to be TCCR0B->ATmega datasheet Pg 96 
+    
+    // set OC0A on compare match
     TCCR0A |= (1 << COM0A0);
     TCCR0A |= (1 << COM0A1);
-    
-    TCCR0B |= (0 << CS00);
+
+    // set the prescalar to 64 
+    // 011 = 3, which gives a precalar of 64
+    TCCR0B |= (1 << CS00);
     TCCR0B |= (1 << CS01);
-    TCCR0B |= (1 << CS02);
+    TCCR0B |= (0 << CS02);
+
+    OCR0A = 249; // set the top of the compare to 249
     
-    TCNT0 = 0;
+    sei(); 	// global interupt enable
     
     _count_ms= 0;
     ms_counter_1 = 0;
