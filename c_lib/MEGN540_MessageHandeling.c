@@ -52,8 +52,15 @@ bool MSG_FLAG_Execute( MSG_FLAG_t* p_flag)
     // THIS FUNCTION WILL BE MOST USEFUL FORM LAB 2 ON.
     // What is the logic to indicate an action should be executed?
     // For Lab 1, ignore the timing part.
-    if (&p_flag->active == true){
-        
+    if (p_flag->active == true){
+        // lower case t call
+        if (p_flag->duration < 0) {
+            return true;
+        }
+        // upercase T call
+        else if (p_flag->duration <= SecondsSince(&p_flag->last_trigger_time)) {
+            return true;
+        }
     }
     return false;
 }
@@ -203,16 +210,21 @@ void Message_Handling_Task()
             {
                 usb_msg_get();
                 
-                float num = usb_msg_get();
-                
-                if (num == 0){
-                    mf_send_time.active = true;
-                }
-                if (num == 1){
-                    mf_time_float_send.active = true;
-                }
-                if (num == 2){
-                    mf_loop_timer.active = true;
+                char num = usb_msg_get();
+                // switch to see witch type of call it is
+                switch(num){
+                    case 0: ;
+                        mf_send_time.active = true;
+                        break;
+                    case 1: ;
+                        mf_time_float_send.active = true;
+                        break;
+                    case 2: ;
+                        mf_loop_timer.active = true;
+                    break;
+                    default:
+                        usb_send_msg("c", command, "?", sizeof("?"));
+                        break;
                 }
             }
             break;
@@ -221,8 +233,8 @@ void Message_Handling_Task()
         default:
             // What to do if you dont recognize the command character
             if (true){
-                char* q = "?";
-                usb_send_msg("c", '?', q, sizeof('?'));
+                usb_send_msg("cc", '?', &command, sizeof(command));
+                usb_flush_input_buffer();
             }
             break;
     }
