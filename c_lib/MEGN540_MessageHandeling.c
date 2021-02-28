@@ -213,12 +213,15 @@ void Message_Handling_Task()
                 char num = usb_msg_get();
                 // switch to see witch type of call it is
                 switch(num){
+                    //Time Now
                     case 0: ;
                         mf_send_time.active = true;
                         break;
+                    //Time to send float
                     case 1: ;
                         mf_time_float_send.active = true;
                         break;
+                    //Time to complete a full loop iteration
                     case 2: ;
                         mf_loop_timer.active = true;
                     break;
@@ -229,6 +232,36 @@ void Message_Handling_Task()
             }
             break;
         case 'T':
+            if( usb_msg_length() >= MEGN540_Message_Len('T') )
+            {
+                usb_msg_get();
+                // number for switch statement
+                char num = usb_msg_get();
+                // float for calculating duration
+                float dur;
+                usb_msg_read_into(&dur, sizeof(dur));
+                // switch to see witch type of call it is
+                switch(num){
+                    //Time Now
+                    case 0: ;
+                        mf_send_time.active = true;
+                        mf_send_time.duration = dur/1000;
+                        break;
+                    //Time to send float
+                    case 1: ;
+                        mf_time_float_send.active = true;
+                        mf_time_float_send.duration = dur/1000;
+                        break;
+                    //Time to complete a full loop iteration
+                    case 2: ;
+                        mf_loop_timer.active = true;
+                        mf_loop_timer.duration = dur/1000;
+                    break;
+                    default:
+                        usb_send_msg("c", command, "?", sizeof("?"));
+                        break;
+                }
+            }
             break;
         default:
             // What to do if you dont recognize the command character
