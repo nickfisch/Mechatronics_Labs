@@ -41,6 +41,8 @@ int main(void)
     USB_SetupHardware();
     GlobalInterruptEnable();
     Message_Handling_Init(); // initialize message handling
+    
+    Time_t StartTime = GetTime();
 
     while( true )
     {
@@ -53,6 +55,18 @@ int main(void)
         if ( MSG_FLAG_Execute( &mf_restart ) ) {
             main();
 		// re initialzie your stuff...
+        } 
+        
+        if ( MSG_FLAG_Execute( &mf_send_time ) ) {
+            
+        } 
+        
+        if ( MSG_FLAG_Execute( &mf_time_float_send ) ) {
+            
+        } 
+        
+        if ( MSG_FLAG_Execute( &mf_loop_timer ) ) {
+            
         }   
    }
 }

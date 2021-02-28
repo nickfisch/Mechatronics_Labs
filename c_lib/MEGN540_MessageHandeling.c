@@ -52,6 +52,9 @@ bool MSG_FLAG_Execute( MSG_FLAG_t* p_flag)
     // THIS FUNCTION WILL BE MOST USEFUL FORM LAB 2 ON.
     // What is the logic to indicate an action should be executed?
     // For Lab 1, ignore the timing part.
+    if (&p_flag->active == true){
+        
+    }
     return false;
 }
 
@@ -67,6 +70,9 @@ void Message_Handling_Init()
     // state machine flags to control your main-loop state machine
 
     MSG_FLAG_Init( &mf_restart ); // needs to be initialized to the default values.
+    MSG_FLAG_Init( &mf_loop_timer );
+    MSG_FLAG_Init( &mf_time_float_send );
+    MSG_FLAG_Init( &mf_send_time );
     return;
 }
 
@@ -193,14 +199,31 @@ void Message_Handling_Task()
             }
             break;
         case 't':
-            //float timeVal = GetTimeSec();
-            //usb_send_msg("cb", command, timeVal, sizeof(timeVal));
+            if( usb_msg_length() >= MEGN540_Message_Len('t') )
+            {
+                usb_msg_get();
+                
+                float num = usb_msg_get();
+                
+                if (num == 0){
+                    mf_send_time.active = true;
+                }
+                if (num == 1){
+                    mf_time_float_send.active = true;
+                }
+                if (num == 2){
+                    mf_loop_timer.active = true;
+                }
+            }
             break;
         case 'T':
             break;
         default:
             // What to do if you dont recognize the command character
-            usb_send_byte('?');
+            if (true){
+                char* q = "?";
+                usb_send_msg("c", '?', q, sizeof('?'));
+            }
             break;
     }
     
