@@ -58,21 +58,23 @@ void SetupTimer0()
     TCNT0 = 0;	 // set timer value to 0
 
     // WGM02 = 2 to clear the timer on compare match 
-    TCCR0A |= (0 << WGM00);
-    TCCR0A |= (1 << WGM01);
-    TCCR0B |= (0 << WGM02);	// needs to be TCCR0B->ATmega datasheet Pg 96 
+    //TCCR0A |= (0 << WGM00);
+    //TCCR0A |= (1 << WGM01);
+    //TCCR0B |= (0 << WGM02);	// needs to be TCCR0B->ATmega datasheet Pg 96 
     
     // set OC0A on compare match
-    TCCR0A |= (1 << COM0A0);
-    TCCR0A |= (1 << COM0A1);
+    //TCCR0A |= (1 << COM0A0);
+    //TCCR0A |= (1 << COM0A1);
 
     // set the prescalar to 64 
     // 011 = 3, which gives a precalar of 64
     TCCR0B |= (1 << CS00);
     TCCR0B |= (1 << CS01);
-    TCCR0B |= (0 << CS02);
+    //TCCR0B |= (0 << CS02);
 
     OCR0A = 249; // set the top of the compare to 249
+    
+    TIMSK0 |= (1 << OCIE0A);
     
     sei(); 	// global interupt enable
     
@@ -91,9 +93,7 @@ float  GetTimeSec()
 {
     // *** MEGN540 Lab 2 ***
     // YOUR CODE HERE
-    Time_t t_t = GetTime();
-    float t = t_t.millisec + (t_t.microsec/1000);
-    return t;
+    return (float)_count_ms/1000 + ((float) GetMicro()/1000000);
 }
 Time_t GetTime()
 {
@@ -132,14 +132,14 @@ float  SecondsSince(const Time_t* time_start_p )
 {
     // *** MEGN540 Lab 2 ***
     // YOUR CODE HERE
-    float delta_time = GetMilli() - time_start_p->microsec + (GetMicro() - time_start_p->millisec)/1000 ;
+    float delta_time = GetTimeSec() - ((float)time_start_p->microsec/1000000) - ((float)time_start_p->millisec/1000);
     return delta_time;
 }
 
 /** This is the Interrupt Service Routine for the Timer0 Compare A feature.
  * You'll need to set the compare flags properly for it to work.
  */
-/*ISR( DEFINE THE COMPARISON TRIGGER )
+ISR(TIMER0_COMPA_vect)
 {
     // *** MEGN540 Lab 2 ***
     // YOUR CODE HERE
@@ -153,4 +153,4 @@ float  SecondsSince(const Time_t* time_start_p )
     ms_counter_2 ++;
     ms_counter_3 ++;
     ms_counter_4 ++;
-}*/
+}
