@@ -241,6 +241,13 @@ void Message_Handling_Task()
                 float dur;
                 usb_msg_read_into(&dur, sizeof(dur));
                 // switch to see witch type of call it is
+                if (dur <= 0) {
+                    mf_send_time.active = false;
+                    mf_time_float_send.active = false;
+                    mf_loop_timer.active = false;
+                    break;
+                }
+                    
                 switch(num){
                     //Time Now
                     case 0: ;
@@ -265,10 +272,8 @@ void Message_Handling_Task()
             break;
         default:
             // What to do if you dont recognize the command character
-            if (true){
-                usb_send_msg("cc", '?', &command, sizeof(command));
-                usb_flush_input_buffer();
-            }
+            usb_send_msg("cc", '?', &command, sizeof(command));
+            usb_flush_input_buffer();
             break;
     }
     

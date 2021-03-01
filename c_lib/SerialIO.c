@@ -474,6 +474,8 @@ void usb_flush_input_buffer()
 {
     // *** MEGN540  ***
     // YOUR CODE HERE
-    
+    while (rb_length_C(&_usb_receive_buffer) > 0) {
+	rb_pop_front_C(&_usb_receive_buffer);
+    }
 }
 

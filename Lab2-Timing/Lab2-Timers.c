@@ -53,8 +53,8 @@ int main(void)
 
         //USB_Echo_Task();// you'll want to remove this once you get your serial sorted
         Message_Handling_Task();
-
-   	// Below here you'll process state-machine flags.
+        
+        // Below here you'll process state-machine flags.
         if ( MSG_FLAG_Execute( &mf_restart ) ) {
             SetupTimer0(); 
             USB_SetupHardware();
@@ -66,10 +66,10 @@ int main(void)
             // variable for current time
             float timer0 = GetTimeSec();
             // send current time
-            usb_send_msg("cb", '1', &timer0, sizeof(timer0));
+            usb_send_msg("cf", '0', &timer0, sizeof(timer0));
             //set variables for future calls
             mf_send_time.last_trigger_time = GetTime();
-            if (mf_send_time.duration == -1){
+            if (mf_send_time.duration <= 0){
                 mf_send_time.active = false;
             }
         } 
@@ -80,16 +80,16 @@ int main(void)
             // float to send for opperation
             float value = 42.024;
             // send the float
-            usb_send_msg("cb", '1', &value, sizeof(value));
+            usb_send_msg("cf", 'N', &value, sizeof(value));
             // calculate the time to send the value
             float timer1 = SecondsSince(&sentTime);
             //send the time to send the float
             USB_Upkeep_Task();
-            usb_send_msg("cb", '1', &timer1, sizeof(timer1));
+            usb_send_msg("cf", '1', &timer1, sizeof(timer1));
             //set variables for future calls
             mf_time_float_send.last_trigger_time = GetTime();
-            if (mf_time_float_send.duration == -1){
-                mf_time_float_send.active = false;
+            if (mf_time_float_send.duration <= 0){
+                mf_time_float_send.active = false;                
             }
         } 
         
@@ -102,14 +102,15 @@ int main(void)
                 // loop time
                 float timer2 = SecondsSince(&startTime);
                 //send message
-                usb_send_msg("cb", '1', &timer2, sizeof(timer2));
+                usb_send_msg("cf", '1', &timer2, sizeof(timer2));
                 //set variables for future calls
                 mf_loop_timer.last_trigger_time = GetTime();
                 firstCall = true;
-                if (mf_loop_timer.duration == -1){
+                if (mf_loop_timer.duration <= 0){
                     mf_loop_timer.active = false;
                 }
             }
+            
         } 
    }
 }

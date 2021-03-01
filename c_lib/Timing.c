@@ -54,9 +54,8 @@ void SetupTimer0()
     // *** MEGN540 Lab 2 ***
     // YOUR CODE HERE
     // Enable timing, setup prescalers, etc.
-   
-    TCNT0 = 0;	 // set timer value to 0
 
+    /*
     // WGM02 = 2 to clear the timer on compare match 
     //TCCR0A |= (0 << WGM00);
     //TCCR0A |= (1 << WGM01);
@@ -68,14 +67,14 @@ void SetupTimer0()
 
     // set the prescalar to 64 
     // 011 = 3, which gives a precalar of 64
+    //TCCR0B |= (0 << CS02);
+    */
+
+    TCNT0 = 0;	 // set timer value to 0
     TCCR0B |= (1 << CS00);
     TCCR0B |= (1 << CS01);
-    //TCCR0B |= (0 << CS02);
-
-    OCR0A = 249; // set the top of the compare to 249
-    
+    OCR0A = 249; // set the top of the compare to 249    
     TIMSK0 |= (1 << OCIE0A);
-    
     sei(); 	// global interupt enable
     
     _count_ms= 0;
@@ -102,7 +101,7 @@ Time_t GetTime()
     Time_t time;
     time.millisec = _count_ms;
     // timer0 value increments every 4 microseconds, so multiply by 4
-    time.microsec = TCNT0*4;    // YOU NEED TO REPLACE THIS WITH A CALL TO THE TIMER0 REGISTER AND MULTIPLY APPROPRIATELY
+    time.microsec = TCNT0*4; 
     return time;
 }
 
@@ -119,7 +118,7 @@ uint16_t GetMicro()
 {
     // *** MEGN540 Lab 2 ***
     // YOUR CODE HERE
-    return TCNT0*4;	// YOU NEED TO REPLACE THIS WITH A CALL TO THE TIMER0 REGISTER AND MULTIPLY APPROPRIATELY
+    return TCNT0*4;
 }
 
 
