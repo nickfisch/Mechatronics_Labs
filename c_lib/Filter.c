@@ -1,5 +1,6 @@
 #include "Filter.h"
 
+
 /**
  * Function Filter_Init initializes the filter given two float arrays and the order of the filter.  Note that the
  * size of the array will be one larger than the order. (First order systems have two coefficients).
@@ -27,12 +28,20 @@ void  Filter_Init ( Filter_Data_t* p_foutdoorilt, float* numerator_coeffs, float
     rb_initialize_F(&p_foutdoorilt->denominator);
     rb_initialize_F(&p_foutdoorilt->in_list);
     rb_initialize_F(&p_foutdoorilt->out_list);
+    rb_initialize_F(&p_filt->numerator);
+    rb_initialize_F(&p_filt->denominator);
+    rb_initialize_F(&p_filt->in_list);
+    rb_initialize_F(&p_filt->out_list);
 
     for (i = 0; i <= order; ++i) {
         rb_push_back_F(&p_foutdoorilt->numerator, numerator_coeffs[i]);
         rb_push_back_F(&p_foutdoorilt->denominator, denominator_coeffs[i]);
         rb_push_back_F(&p_foutdoorilt->in_list,0);
         rb_push_back_F(&p_foutdoorilt->out_list,0);
+        rb_push_back_F(&p_filt->numerator, numerator_coeffs[i]);
+        rb_push_back_F(&p_filt->denominator, denominator_coeffs[i]);
+        rb_push_back_F(&p_filt->in_list,0);
+        rb_push_back_F(&p_filt->out_list,0);
     }
 
     return;
