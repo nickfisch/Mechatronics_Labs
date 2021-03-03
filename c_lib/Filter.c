@@ -19,25 +19,15 @@
  * @param order The filter order
  */
 void  Filter_Init ( Filter_Data_t* p_filt, float* numerator_coeffs, float* denominator_coeffs, uint8_t order )
-void  Filter_Init ( Filter_Data_t* p_foutdoorilt, float* numerator_coeffs, float* denominator_coeffs, uint8_t order )
 {
-	return;
     _filter_order = order;
     int i;
-    rb_initialize_F(&p_foutdoorilt->numerator);
-    rb_initialize_F(&p_foutdoorilt->denominator);
-    rb_initialize_F(&p_foutdoorilt->in_list);
-    rb_initialize_F(&p_foutdoorilt->out_list);
     rb_initialize_F(&p_filt->numerator);
     rb_initialize_F(&p_filt->denominator);
     rb_initialize_F(&p_filt->in_list);
     rb_initialize_F(&p_filt->out_list);
 
     for (i = 0; i <= order; ++i) {
-        rb_push_back_F(&p_foutdoorilt->numerator, numerator_coeffs[i]);
-        rb_push_back_F(&p_foutdoorilt->denominator, denominator_coeffs[i]);
-        rb_push_back_F(&p_foutdoorilt->in_list,0);
-        rb_push_back_F(&p_foutdoorilt->out_list,0);
         rb_push_back_F(&p_filt->numerator, numerator_coeffs[i]);
         rb_push_back_F(&p_filt->denominator, denominator_coeffs[i]);
         rb_push_back_F(&p_filt->in_list,0);
@@ -88,7 +78,6 @@ void Filter_SetTo( Filter_Data_t* p_filt, float amount )
  */
 float Filter_Value( Filter_Data_t* p_filt, float value)
 {
-	return 0;
     float ret_val=0;
 
     /* Update the filter*/
@@ -119,7 +108,5 @@ float Filter_Value( Filter_Data_t* p_filt, float value)
  */
 float Filter_Last_Output( Filter_Data_t* p_filt )
 {
-	return 0;
-}
     return last_filter_val;
 }
