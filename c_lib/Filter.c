@@ -18,8 +18,24 @@
  * @param order The filter order
  */
 void  Filter_Init ( Filter_Data_t* p_filt, float* numerator_coeffs, float* denominator_coeffs, uint8_t order )
+void  Filter_Init ( Filter_Data_t* p_foutdoorilt, float* numerator_coeffs, float* denominator_coeffs, uint8_t order )
 {
 	return;
+    _filter_order = order;
+    int i;
+    rb_initialize_F(&p_foutdoorilt->numerator);
+    rb_initialize_F(&p_foutdoorilt->denominator);
+    rb_initialize_F(&p_foutdoorilt->in_list);
+    rb_initialize_F(&p_foutdoorilt->out_list);
+
+    for (i = 0; i <= order; ++i) {
+        rb_push_back_F(&p_foutdoorilt->numerator, numerator_coeffs[i]);
+        rb_push_back_F(&p_foutdoorilt->denominator, denominator_coeffs[i]);
+        rb_push_back_F(&p_foutdoorilt->in_list,0);
+        rb_push_back_F(&p_foutdoorilt->out_list,0);
+    }
+
+    return;
 }
 
 /**
@@ -30,6 +46,11 @@ void  Filter_Init ( Filter_Data_t* p_filt, float* numerator_coeffs, float* denom
  */
 void  Filter_ShiftBy( Filter_Data_t* p_filt, float shift_amount )
 {
+    int i;
+    for (i = 0; i <= _filter_order; ++i) {
+        rb_set_F(&p_filt->in_list, i, rb_get_F(&p_filt->in_list,i)+shift_amount );
+        rb_set_F(&p_filt->out_list, i, rb_get_F(&p_filt->out_list,i)+shift_amount);
+    }
     return;
 }
 
@@ -41,6 +62,12 @@ void  Filter_ShiftBy( Filter_Data_t* p_filt, float shift_amount )
  */
 void Filter_SetTo( Filter_Data_t* p_filt, float amount )
 {
+    for (int i = 0; i <= rb_length_F(&p_filt->in_list); ++i) {
+        rb_set_F(&p_filt->in_list, i,  amount);
+    }
+    for (int i = 0; i < rb_length_F(&p_filt->out_list); ++i) {
+        rb_set_F(&p_filt->out_list, i, amount);
+    }
     return;
 }
 
@@ -53,6 +80,28 @@ void Filter_SetTo( Filter_Data_t* p_filt, float amount )
 float Filter_Value( Filter_Data_t* p_filt, float value)
 {
 	return 0;
+    float ret_val=0;
+
+    /* Update the filter*/
+    // push value to front of input
+    rb_push_front_F(&p_filt->in_list, value);
+    rb_pop_back_F(&p_filt->in_list);
+
+    for (int i = 1; i <= _filter_order; ++i) {
+        ret_val -= rb_get_F(&p_filt->denominator, i) * rb_get_F(&p_filt->out_list, i-1);
+    }
+
+    for (int i = 0; i <= _filter_order; ++i) {
+        ret_val += rb_get_F(&p_filt->numerator, i) * rb_get_F(&p_filt->in_list, i);
+    }
+    ret_val /= rb_get_F(&p_filt->denominator, 0);
+
+    // push new out value to the front of the out_list
+    rb_push_front_F(&p_filt->out_list, ret_val);
+    rb_pop_back_F(&p_filt->out_list);
+
+    last_filter_val = ret_val;
+    return ret_val;
 }
 
 /**
@@ -62,4 +111,6 @@ float Filter_Value( Filter_Data_t* p_filt, float value)
 float Filter_Last_Output( Filter_Data_t* p_filt )
 {
 	return 0;
+}
+    return last_filter_val;
 }
