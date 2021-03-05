@@ -42,6 +42,7 @@
 #include <avr/io.h>        // For pin input/output access
 #include <ctype.h>         // For int32_t type
 
+
 /**
  * Function Battery_Monitor_Init initializes the Battery Monitor to record the current battery voltages.
  */

@@ -1,5 +1,6 @@
 #include "Encoder.h"
 
+#define PI 3.142857
 /**
 * Internal counters for the Interrupts to increment or decrement as necessary.
 */
@@ -16,13 +17,15 @@ static volatile int32_t _right_counts;  // Static limits it's use to this file
 /** Helper Funcions for Accessing Bit Information */
 // *** MEGN540 Lab 3 TODO ***
 // Hint, use avr's bit_is_set function to help
-static inline bool Right_XOR() { return 0; } // MEGN540 Lab 3 TODO
-static inline bool Right_B()   { return 0; } // MEGN540 Lab 3 TODO
-static inline bool Right_A()   { return 0; } // MEGN540 Lab 3 TODO
+// bit_is_set(register, bit) returns true if the bit register argument is true 
+// inline has the compiler makes the function call 'replaced' with the funciton contents
+static inline bool Right_XOR() { return bit_is_set(PORTE, PE6); } // MEGN540 Lab 3 TODO
+static inline bool Right_B()   { return bit_is_set(PORTF, PF0); } // MEGN540 Lab 3 TODO
+static inline bool Right_A()   { return (Right_XOR() ^ Right_B()); } // MEGN540 Lab 3 TODO
 
-static inline bool Left_XOR() { return 0; } // MEGN540 Lab 3 TODO
-static inline bool Left_B()   { return 0; } // MEGN540 Lab 3 TODO
-static inline bool Left_A()   { return 0; } // MEGN540 Lab 3 TODO
+static inline bool Left_XOR() { return bit_is_set(PORTB, PB4); } // MEGN540 Lab 3 TODO
+static inline bool Left_B()   { return bit_is_set(PORTE, PE2); } // MEGN540 Lab 3 TODO
+static inline bool Left_A()   { return (Left_XOR() ^ Left_B()); } // MEGN540 Lab 3 TODO
 
 /**
  * Function Encoders_Init initializes the encoders, sets up the pin change interrupts, and zeros the initial encoder
@@ -54,6 +57,12 @@ void Encoders_Init()
 
     _left_counts = 0;  // MEGN540 Lab 3 TODO
     _right_counts = 0;  // MEGN540 Lab 3 TODO
+
+    EICRB |= (1 << ISC60); 	// enable trigger on any logic change on INT6
+    EIMSK |= (1 << INT6);	// triggered inputs on right encoder
+    
+    PCICR |= (1 << PCIE0);	// enable pin change interrupts
+    PCMSK0 |= (1 << PCINT4);	// enalbe PCINT4 pin to trigger interrupt
 }
 
 
@@ -68,7 +77,10 @@ int32_t Counts_Left()
     // Note: Interrupts can trigger during a function call and an int32 requires
     // multiple clock cycles to read/save. You may want to stop interrupts, copy the value,
     // and re-enable interrupts to prevent this from corrupting your read/write.
-    return 0;
+    cli();	// disable interrupts
+    int32_t ret_val = _left_counts;	// concatenate left count into int32_t to return
+    sei();
+    return ret_val;
 }
 
 /**
@@ -82,7 +94,10 @@ int32_t Counts_Right()
     // Note: Interrupts can trigger during a function call and an int32 requires
     // multiple clock cycles to read/save. You may want to stop interrupts, copy the value,
     // and re-enable interrupts to prevent this from corrupting your read/write.
-    return 0;
+    cli();	// disable interrupts
+    int32_t ret_val = _right_counts;	// concatenate right count into int32_t to return
+    sei();
+    return ret_val;
 }
 
 /**
@@ -93,7 +108,8 @@ float Rad_Left()
 {
     // *** MEGN540 Lab3 ***
     // YOUR CODE HERE.  How many counts per rotation???
-    return 0;
+    float radians = Counts_Left() * (PI)/6;
+    return radians;
 }
 
 /**
@@ -104,7 +120,8 @@ float Rad_Right()
 {
     // *** MEGN540 Lab3 ***
     // YOUR CODE HERE.  How many counts per rotation???
-    return 0;
+    float radians = Counts_Left() * (PI)/6;
+    return radians;
 }
 
 /**
@@ -112,17 +129,22 @@ float Rad_Right()
  * the Pin Change Interrupts can trigger for multiple pins.
  * @return
  */
-//ISR()
-//{
-//
-//}
+ISR(PCINT0_vect)
+{
+	if (Left_XOR() == _last_left_XOR) ;
+	else if (Left_XOR() != _last_left_XOR) {
+		if ((Left_A() && Left_XOR()) != Left_B()) _left_counts++; // if A leads B, motor drives forward
+		else _left_counts--;  // else, backward
+	}
+}
 
 
 /**
  * Interrupt Service Routine for the right Encoder.
  * @return
  */
-//ISR()
-//{
-//
-//}
+ISR(INT6_vect)
+{
+	if ((Right_A() && Right_XOR()) != Right_B()) _right_counts++;
+	else _right_counts--;
+}

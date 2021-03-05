@@ -48,7 +48,7 @@ int main(void)
     bool firstCall = true;
 
     while( true )
-    {
+   {
         USB_Upkeep_Task();
 
         //USB_Echo_Task();// you'll want to remove this once you get your serial sorted
