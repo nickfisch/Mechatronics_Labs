@@ -80,6 +80,8 @@ void Message_Handling_Init()
     MSG_FLAG_Init( &mf_loop_timer );
     MSG_FLAG_Init( &mf_time_float_send );
     MSG_FLAG_Init( &mf_send_time );
+    MSG_FLAG_Init( &mf_encoder_count );
+    MSG_FLAG_Init( &mf_battery_voltage );
     return;
 }
 
@@ -117,85 +119,25 @@ void Message_Handling_Task()
         case '*':
             if( usb_msg_length() >= MEGN540_Message_Len('*') )
             {
-                //then process your times...
-
-                // remove the command from the usb recieved buffer using the usb_msg_get() function
-                usb_msg_get(); // removes the first character from the received buffer, we already know it was a * so no need to save it as a variable
-
-                // Build a meaningful structure to put your data in. Here we want two floats.
-                struct __attribute__((__packed__)) { float v1; float v2; } data;
-
-                // Copy the bytes from the usb receive buffer into our structure so we can use the information
-                usb_msg_read_into( &data, sizeof(data) );
-
-                // Do the thing you need to do. Here we want to multiply
-                float ret_val = data.v1 * data.v2;
-
-                // send response right here if appropriate.
-                usb_send_msg("cf", command, &ret_val, sizeof(ret_val));
+                lab1Case(command);
             }
             break;
         case '/':
             if( usb_msg_length() >= MEGN540_Message_Len('/') )
             {
-                //then process your divide...
-                
-                // remove the command from the usb recieved buffer using the usb_msg_get() function
-                usb_msg_get(); // removes the first character from the received buffer, we already know it was a * so no need to save it as a variable
-
-                // Build a meaningful structure to put your data in. Here we want two floats.
-                struct __attribute__((__packed__)) { float v1; float v2; } data;
-
-                // Copy the bytes from the usb receive buffer into our structure so we can use the information
-                usb_msg_read_into( &data, sizeof(data) );
-
-                // Do the thing you need to do. Here we want to devide
-                float ret_val = data.v1 / data.v2;
-
-                // send response right here if appropriate.
-                usb_send_msg("cf", command, &ret_val, sizeof(ret_val));
+                lab1Case(command);
             }
             break;
         case '+':
             if( usb_msg_length() >= MEGN540_Message_Len('+') )
             {
-                //then process your plus...
-                
-                // remove the command from the usb recieved buffer using the usb_msg_get() function
-                usb_msg_get(); // removes the first character from the received buffer, we already know it was a * so no need to save it as a variable
-
-                // Build a meaningful structure to put your data in. Here we want two floats.
-                struct __attribute__((__packed__)) { float v1; float v2; } data;
-
-                // Copy the bytes from the usb receive buffer into our structure so we can use the information
-                usb_msg_read_into( &data, sizeof(data) );
-
-                // Do the thing you need to do. Here we want to add
-                float ret_val = data.v1 + data.v2;
-
-                // send response right here if appropriate.
-                usb_send_msg("cf", command, &ret_val, sizeof(ret_val));
+                lab1Case(command);
             }
             break;
         case '-':
             if( usb_msg_length() >= MEGN540_Message_Len('-') )
             {
-                //then process your minus...
-                
-                // remove the command from the usb recieved buffer using the usb_msg_get() function
-                usb_msg_get(); // removes the first character from the received buffer, we already know it was a * so no need to save it as a variable
-
-                // Build a meaningful structure to put your data in. Here we want two floats.
-                struct __attribute__((__packed__)) { float v1; float v2; } data;
-
-                // Copy the bytes from the usb receive buffer into our structure so we can use the information
-                usb_msg_read_into( &data, sizeof(data) );
-
-                // Do the thing you need to do. Here we want to subtract
-                float ret_val = data.v1 - data.v2;
-
-                // send response right here if appropriate.
-                usb_send_msg("cf", command, &ret_val, sizeof(ret_val));
+                lab1Case(command);
             }
             break;
         case '~':
@@ -208,66 +150,63 @@ void Message_Handling_Task()
         case 't':
             if( usb_msg_length() >= MEGN540_Message_Len('t') )
             {
-                usb_msg_get();
-                
-                char num = usb_msg_get();
-                // switch to see witch type of call it is
-                switch(num){
-                    //Time Now
-                    case 0: ;
-                        mf_send_time.active = true;
-                        break;
-                    //Time to send float
-                    case 1: ;
-                        mf_time_float_send.active = true;
-                        break;
-                    //Time to complete a full loop iteration
-                    case 2: ;
-                        mf_loop_timer.active = true;
-                    break;
-                    default:
-                        usb_send_msg("c", command, "?", sizeof("?"));
-                        break;
-                }
+                tCase(command);
             }
             break;
         case 'T':
             if( usb_msg_length() >= MEGN540_Message_Len('T') )
             {
+                TCase(command);
+            }
+            break;
+        case 'e':
+            if( usb_msg_length() >= MEGN540_Message_Len('e') )
+            {
                 usb_msg_get();
-                // number for switch statement
-                char num = usb_msg_get();
+                
+                mf_encoder_count.active = true;
+            }
+            break;
+        case 'E':
+            if( usb_msg_length() >= MEGN540_Message_Len('E') )
+            {
+                usb_msg_get();
                 // float for calculating duration
                 float dur;
                 usb_msg_read_into(&dur, sizeof(dur));
                 // switch to see witch type of call it is
                 if (dur <= 0) {
-                    mf_send_time.active = false;
-                    mf_time_float_send.active = false;
-                    mf_loop_timer.active = false;
+                    mf_encoder_count.active = false;
                     break;
                 }
-                    
-                switch(num){
-                    //Time Now
-                    case 0: ;
-                        mf_send_time.active = true;
-                        mf_send_time.duration = dur/1000;
-                        break;
-                    //Time to send float
-                    case 1: ;
-                        mf_time_float_send.active = true;
-                        mf_time_float_send.duration = dur/1000;
-                        break;
-                    //Time to complete a full loop iteration
-                    case 2: ;
-                        mf_loop_timer.active = true;
-                        mf_loop_timer.duration = dur/1000;
+                mf_encoder_count.active = true;
+                mf_encoder_count.duration = dur/1000;
+                break;
+            }
+            break;
+        case 'b':
+            if( usb_msg_length() >= MEGN540_Message_Len('b') )
+            {
+                usb_msg_get();
+                
+                mf_battery_voltage.active = true;
+            }
+            break;
+        case 'B':
+            if( usb_msg_length() >= MEGN540_Message_Len('B') )
+            {
+                usb_msg_get();
+                // float for calculating duration
+                float dur;
+                usb_msg_read_into(&dur, sizeof(dur));
+                // switch to see witch type of call it is
+                if (dur <= 0) {
+                    mf_battery_voltage.active = false;
                     break;
-                    default:
-                        usb_send_msg("c", command, "?", sizeof("?"));
-                        break;
                 }
+                mf_battery_voltage.active = true;
+                mf_battery_voltage.duration = dur/1000;
+                break;
             }
             break;
         default:
@@ -279,7 +218,101 @@ void Message_Handling_Task()
     
 }
 
+void lab1Case(char command){
+    //then process your times...
 
+    // remove the command from the usb recieved buffer using the usb_msg_get() function
+    usb_msg_get(); // removes the first character from the received buffer, we already know it was a * so no need to save it as a variable
+
+    // Build a meaningful structure to put your data in. Here we want two floats.
+    struct __attribute__((__packed__)) { float v1; float v2; } data;
+
+    // Copy the bytes from the usb receive buffer into our structure so we can use the information
+    usb_msg_read_into( &data, sizeof(data) );
+    
+    //switch to do the */-+
+    float ret_val;
+    switch ( command ) {
+        case '*':
+            ret_val = data.v1 * data.v2;
+            break;
+        case '/':
+            ret_val = data.v1 / data.v2;
+            break;
+        case '+':
+            ret_val = data.v1 + data.v2;
+            break;
+        case '-':
+            ret_val = data.v1 - data.v2;
+            break;
+        default:
+            break;
+    }
+
+    // send response right here if appropriate.
+    usb_send_msg("cf", command, &ret_val, sizeof(ret_val));
+}
+
+void tCase(char command){
+    usb_msg_get();
+                
+    char num = usb_msg_get();
+    // switch to see witch type of call it is
+    switch(num){
+        //Time Now
+        case 0: ;
+            mf_send_time.active = true;
+            return;
+        //Time to send float
+        case 1: ;
+            mf_time_float_send.active = true;
+            return;
+        //Time to complete a full loop iteration
+        case 2: ;
+            mf_loop_timer.active = true;
+            return;
+        default:
+            usb_send_msg("c", command, "?", sizeof("?"));
+            return;
+    }
+}
+
+void TCase(char command){
+    usb_msg_get();
+    // number for switch statement
+    char num = usb_msg_get();
+    // float for calculating duration
+    float dur;
+    usb_msg_read_into(&dur, sizeof(dur));
+    // switch to see witch type of call it is
+    if (dur <= 0) {
+        mf_send_time.active = false;
+        mf_time_float_send.active = false;
+        mf_loop_timer.active = false;
+        return;
+    }
+        
+    switch(num){
+        //Time Now
+        case 0: ;
+            mf_send_time.active = true;
+            mf_send_time.duration = dur/1000;
+            return;
+        //Time to send float
+        case 1: ;
+            mf_time_float_send.active = true;
+            mf_time_float_send.duration = dur/1000;
+            return;
+        //Time to complete a full loop iteration
+        case 2: ;
+            mf_loop_timer.active = true;
+            mf_loop_timer.duration = dur/1000;
+            return;
+        default:
+            usb_send_msg("c", command, "?", sizeof("?"));
+            return;
+    }
+}
 
 /**
  * Function MEGN540_Message_Len returns the number of bytes associated with a command string per the
@@ -300,6 +333,8 @@ uint8_t MEGN540_Message_Len( char cmd )
         case 'T': return	6; break;
         case 'e': return	1; break;
         case 'E': return	5; break;
+        case 'b': return	1; break;
+        case 'B': return	5; break;
 //        case 'a': return	1; break;
 //        case 'A': return 	5; break;
 //        case 'w': return	1; break;

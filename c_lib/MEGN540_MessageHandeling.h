@@ -46,6 +46,8 @@ MSG_FLAG_t mf_restart;       ///<-- This flag indicates that the device received
 MSG_FLAG_t mf_loop_timer;    ///<-- Indicates if the system should report time to complete a loop.
 MSG_FLAG_t mf_time_float_send;   ///<-- Indicates if the system should report the time to send a float.
 MSG_FLAG_t mf_send_time;     ///<-- Indicates if the system should send the current time.
+MSG_FLAG_t mf_encoder_count; /// Indicates if system should send the encoder counts
+MSG_FLAG_t mf_battery_voltage; /// Indicates if the system should send Battery voltage
 
 /**
  * Function MSG_FLAG_Execute indicates if the action associated with the message flag should be executed
@@ -74,5 +76,12 @@ void Message_Handling_Task();
  * @return Size of expected string. Returns 0 if unrecognized.
  */
 uint8_t MEGN540_Message_Len( char cmd );
+
+//functions to keep things clean
+void lab1Case(char command);
+
+void tCase(char command);
+
+void TCase(char command);
 
 #endif

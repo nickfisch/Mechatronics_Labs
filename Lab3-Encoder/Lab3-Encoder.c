@@ -30,20 +30,107 @@
 
 #include "../c_lib/SerialIO.h"
 #include "../c_lib/Timing.h"
+#include "../c_lib/MEGN540_MessageHandeling.h"
 
 /** Main program entry point. This routine configures the hardware required by the application, then
  *  enters a loop to run the application tasks in sequence.
  */
 int main(void)
 {
-    SetupTimer0();         // initialize timer zero functionality
-    USB_SetupHardware();   // initialize USB
+    SetupTimer0(); 
+    USB_SetupHardware();
+    GlobalInterruptEnable();
+    Message_Handling_Init(); // initialize message handling
+    
+    // variable needed for timing the while loop
+    Time_t startTime;
+    // variable needed for mf_loop_timer
+    bool firstCall = true;
 
-    GlobalInterruptEnable(); // Enable Global Interrupts for USB and Timer etc.
+    while( true )
+   {
+        USB_Upkeep_Task();
 
-    for (;;)
-    {
-        USB_Echo_Task();
-        USB_USBTask();
-    }
+        //USB_Echo_Task();// you'll want to remove this once you get your serial sorted
+        Message_Handling_Task();
+        
+        // Below here you'll process state-machine flags.
+        if ( MSG_FLAG_Execute( &mf_restart ) ) {
+            SetupTimer0(); 
+            USB_SetupHardware();
+            GlobalInterruptEnable();
+            Message_Handling_Init(); 
+        }   
+        
+        if ( MSG_FLAG_Execute( &mf_send_time ) ) {
+            // variable for current time
+            float timer0 = GetTimeSec();
+            // send current time
+            usb_send_msg("cf", '0', &timer0, sizeof(timer0));
+            //set variables for future calls
+            mf_send_time.last_trigger_time = GetTime();
+            if (mf_send_time.duration <= 0){
+                mf_send_time.active = false;
+            }
+        } 
+        
+        if ( MSG_FLAG_Execute( &mf_time_float_send ) ) {
+            // time structure for calling secconds since with
+            Time_t sentTime = GetTime();
+            // float to send for opperation
+            float value = 42.024;
+            // send the float
+            usb_send_msg("cf", 'N', &value, sizeof(value));
+            // calculate the time to send the value
+            float timer1 = SecondsSince(&sentTime);
+            //send the time to send the float
+            USB_Upkeep_Task();
+            usb_send_msg("cf", '1', &timer1, sizeof(timer1));
+            //set variables for future calls
+            mf_time_float_send.last_trigger_time = GetTime();
+            if (mf_time_float_send.duration <= 0){
+                mf_time_float_send.active = false;                
+            }
+        } 
+        
+        if ( MSG_FLAG_Execute( &mf_loop_timer ) || !firstCall ) {
+            if(firstCall){
+                startTime = GetTime();
+                firstCall = false;
+            }
+            else{
+                // loop time
+                float timer2 = SecondsSince(&startTime);
+                //send message
+                usb_send_msg("cf", '1', &timer2, sizeof(timer2));
+                //set variables for future calls
+                mf_loop_timer.last_trigger_time = GetTime();
+                firstCall = true;
+                if (mf_loop_timer.duration <= 0){
+                    mf_loop_timer.active = false;
+                }
+            }
+            
+        } 
+        
+        if ( MSG_FLAG_Execute( &mf_encoder_count ) ) {
+            // need meat
+            
+            //set variables for future calls
+            mf_encoder_count.last_trigger_time = GetTime();
+            if (mf_encoder_count.duration <= 0){
+                mf_encoder_count.active = false;
+            }
+        }
+        
+        if ( MSG_FLAG_Execute( &mf_battery_voltage ) ) {
+            // need meat
+            
+            //set variables for future calls
+            mf_battery_voltage.last_trigger_time = GetTime();
+            if (mf_battery_voltage.duration <= 0){
+                mf_battery_voltage.active = false;
+            }
+        }
+   }
 }
