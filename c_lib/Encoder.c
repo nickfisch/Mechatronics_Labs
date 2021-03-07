@@ -77,9 +77,12 @@ int32_t Counts_Left()
     // Note: Interrupts can trigger during a function call and an int32 requires
     // multiple clock cycles to read/save. You may want to stop interrupts, copy the value,
     // and re-enable interrupts to prevent this from corrupting your read/write.
+    unsigned char sreg;
+    sreg = SREG;
     cli();	// disable interrupts
     int32_t ret_val = _left_counts;	// concatenate left count into int32_t to return
     sei();
+    SREG = sreg;
     return ret_val;
 }
 
@@ -94,9 +97,12 @@ int32_t Counts_Right()
     // Note: Interrupts can trigger during a function call and an int32 requires
     // multiple clock cycles to read/save. You may want to stop interrupts, copy the value,
     // and re-enable interrupts to prevent this from corrupting your read/write.
+    unsigned char sreg;
+    sreg = SREG;
     cli();	// disable interrupts
     int32_t ret_val = _right_counts;	// concatenate right count into int32_t to return
     sei();
+    SREG = sreg;
     return ret_val;
 }
 
