@@ -30,6 +30,8 @@
 
 #include "../c_lib/SerialIO.h"
 #include "../c_lib/Timing.h"
+#include "../c_lib/Encoder.h"
+#include "../c_lib/Battery_Monitor.h"
 #include "../c_lib/MEGN540_MessageHandeling.h"
 
 /** Main program entry point. This routine configures the hardware required by the application, then
@@ -38,6 +40,8 @@
 int main(void)
 {
     SetupTimer0(); 
+    Encoders_Init();
+    Battery_Monitor_Init();
     USB_SetupHardware();
     GlobalInterruptEnable();
     Message_Handling_Init(); // initialize message handling
@@ -57,6 +61,8 @@ int main(void)
         // Below here you'll process state-machine flags.
         if ( MSG_FLAG_Execute( &mf_restart ) ) {
             SetupTimer0(); 
+            Encoders_Init();
+            Battery_Monitor_Init();
             USB_SetupHardware();
             GlobalInterruptEnable();
             Message_Handling_Init(); 
@@ -114,8 +120,11 @@ int main(void)
         } 
         
         if ( MSG_FLAG_Execute( &mf_encoder_count ) ) {
-            // need meat
-            
+            struct __attribute__((__packed__)) { float cleft; float cright; } data;
+            data.cleft = Counts_Left();
+            data.cleft = Counts_Right();
+            usb_send_msg("cf", 'L', &data.cleft, sizeof(data.cleft));
+            usb_send_msg("cf", 'R', &data.cright, sizeof(data.cright));
             //set variables for future calls
             mf_encoder_count.last_trigger_time = GetTime();
             if (mf_encoder_count.duration <= 0){
@@ -124,13 +133,17 @@ int main(void)
         }
         
         if ( MSG_FLAG_Execute( &mf_battery_voltage ) ) {
-            // need meat
-            
+            float vol = Battery_Voltage();
+            usb_send_msg("cf", 'V', &vol, sizeof(vol));
             //set variables for future calls
             mf_battery_voltage.last_trigger_time = GetTime();
             if (mf_battery_voltage.duration <= 0){
                 mf_battery_voltage.active = false;
             }
+        }
+        
+        if ( MSG_FLAG_Execute( &mf_battery_voltage_low ) ) {
+            // send low battery warning
         }
    }
 }

@@ -48,6 +48,7 @@ MSG_FLAG_t mf_time_float_send;   ///<-- Indicates if the system should report th
 MSG_FLAG_t mf_send_time;     ///<-- Indicates if the system should send the current time.
 MSG_FLAG_t mf_encoder_count; /// Indicates if system should send the encoder counts
 MSG_FLAG_t mf_battery_voltage; /// Indicates if the system should send Battery voltage
+MSG_FLAG_t mf_battery_voltage_low; /// Indicates if the system should send low Battery voltage warning
 
 /**
  * Function MSG_FLAG_Execute indicates if the action associated with the message flag should be executed

@@ -82,6 +82,7 @@ void Message_Handling_Init()
     MSG_FLAG_Init( &mf_send_time );
     MSG_FLAG_Init( &mf_encoder_count );
     MSG_FLAG_Init( &mf_battery_voltage );
+    MSG_FLAG_Init( &mf_battery_voltage_low );
     return;
 }
 
