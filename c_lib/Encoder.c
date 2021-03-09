@@ -50,7 +50,7 @@ void Encoders_Init()
     // Initialize static file variables. These probably need to be updated.
     _last_right_A = 0;  // MEGN540 Lab 3 TODO
     _last_right_B = 0;  // MEGN540 Lab 3 TODO
-_last_left_A = 0;  // MEGN540 Lab 3 TODO
+    _last_left_A = 0;  // MEGN540 Lab 3 TODO
     _last_left_B = 0;  // MEGN540 Lab 3 TODO
     _last_left_XOR = 0;  // MEGN540 Lab 3 TODO
 

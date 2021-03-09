@@ -178,6 +178,7 @@ void Message_Handling_Task()
                 // switch to see witch type of call it is
                 if (dur <= 0) {
                     mf_encoder_count.active = false;
+                    mf_encoder_count.duration = -1;
                     break;
                 }
                 mf_encoder_count.active = true;
@@ -203,6 +204,7 @@ void Message_Handling_Task()
                 // switch to see witch type of call it is
                 if (dur <= 0) {
                     mf_battery_voltage.active = false;
+                    mf_battery_voltage.duration = -1;
                     break;
                 }
                 mf_battery_voltage.active = true;
@@ -290,6 +292,9 @@ void TCase(char command){
         mf_send_time.active = false;
         mf_time_float_send.active = false;
         mf_loop_timer.active = false;
+        mf_send_time.duration = -1;
+        mf_time_float_send.duration = -1;
+        mf_loop_timer.duration = -1;
         return;
     }
         
