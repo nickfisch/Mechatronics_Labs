@@ -122,7 +122,7 @@ int main(void)
         if ( MSG_FLAG_Execute( &mf_encoder_count ) ) {
             struct __attribute__((__packed__)) { float cleft; float cright; } data;
             data.cleft = Counts_Left();
-            data.cleft = Counts_Right();
+            data.cright = Counts_Right();
             usb_send_msg("cf", 'L', &data.cleft, sizeof(data.cleft));
             usb_send_msg("cf", 'R', &data.cright, sizeof(data.cright));
             //set variables for future calls

@@ -3,7 +3,9 @@
 #include "Filter.h"
 
 static const float BITS_TO_BATTERY_VOLTS =2;
+
 //static Filter_Data_t Battery_Filter;
+
 /**
  * Function Battery_Monitor_Init initializes the Battery Monitor to record the current battery voltages.
  */
@@ -12,8 +14,9 @@ void Battery_Monitor_Init()
 	// *** MEGN540 LAB3 YOUR CODE HERE ***
     ADCSRA |= (1 << MUX2) | (1 << MUX1) | (1 << ADEN);	// MUX sets ADC6 as input ADEN enables analog to digital conversion
     ADCSRA |= (1 << ADPS0) | (1 << ADPS1) | (1 << ADPS2);
-    
-    //TODO Need to determine numerator and denominator coefficients
+    ADMUX |= (1 << REFS0) | (1 << REFS1);	// Internal 2.56V reference
+
+    // TODO Need to determine numerator and denominator coefficients
     //int filter_order = 4;
     //float numerator[] = {5, 0, 0, 0, 0};  
     //float denominator[] = {1, 1, 1, 1, 1};
@@ -38,8 +41,8 @@ float Battery_Voltage()
     unsigned char sreg;
     sreg = SREG;
     cli();	// disable interrupts
-    data.split.LSB = ADCL;
     data.split.MSB = ADCH;
+    data.split.LSB = ADCL;
     sei();	// re enable interrupts
     SREG = sreg;
     return data.value * BITS_TO_BATTERY_VOLTS;

@@ -19,13 +19,13 @@ static volatile int32_t _right_counts;  // Static limits it's use to this file
 // Hint, use avr's bit_is_set function to help
 // bit_is_set(register, bit) returns true if the bit register argument is true 
 // inline has the compiler makes the function call 'replaced' with the funciton contents
-static inline bool Right_XOR() { return bit_is_set(PORTE, PE6); } // MEGN540 Lab 3 TODO
-static inline bool Right_B()   { return bit_is_set(PORTF, PF0); } // MEGN540 Lab 3 TODO
-static inline bool Right_A()   { return (Right_XOR() ^ Right_B()); } // MEGN540 Lab 3 TODO
+static inline bool Right_XOR() { return bit_is_set(PINE, PE6); } // MEGN540 Lab 3 TODO
+static inline bool Right_B()   { return bit_is_set(PINF, PF0); } // MEGN540 Lab 3 TODO
+static inline bool Right_A()   { return (Right_XOR()^Right_B()); } // MEGN540 Lab 3 TODO
 
-static inline bool Left_XOR() { return bit_is_set(PORTB, PB4); } // MEGN540 Lab 3 TODO
-static inline bool Left_B()   { return bit_is_set(PORTE, PE2); } // MEGN540 Lab 3 TODO
-static inline bool Left_A()   { return (Left_XOR() ^ Left_B()); } // MEGN540 Lab 3 TODO
+static inline bool Left_XOR() { return bit_is_set(PINB, PB4); } // MEGN540 Lab 3 TODO 
+static inline bool Left_B()   { return bit_is_set(PINE, PE2); } // MEGN540 Lab 3 TODO
+static inline bool Left_A()   { return (Left_XOR()^Left_B()); } // MEGN540 Lab 3 TODO
 
 /**
  * Function Encoders_Init initializes the encoders, sets up the pin change interrupts, and zeros the initial encoder
@@ -50,8 +50,7 @@ void Encoders_Init()
     // Initialize static file variables. These probably need to be updated.
     _last_right_A = 0;  // MEGN540 Lab 3 TODO
     _last_right_B = 0;  // MEGN540 Lab 3 TODO
-
-    _last_left_A = 0;  // MEGN540 Lab 3 TODO
+_last_left_A = 0;  // MEGN540 Lab 3 TODO
     _last_left_B = 0;  // MEGN540 Lab 3 TODO
     _last_left_XOR = 0;  // MEGN540 Lab 3 TODO
 
@@ -77,12 +76,12 @@ int32_t Counts_Left()
     // Note: Interrupts can trigger during a function call and an int32 requires
     // multiple clock cycles to read/save. You may want to stop interrupts, copy the value,
     // and re-enable interrupts to prevent this from corrupting your read/write.
-    unsigned char sreg;
-    sreg = SREG;
-    cli();	// disable interrupts
+    //unsigned char sreg;
+    //sreg = SREG;
+    //cli();	// disable interrupts
     int32_t ret_val = _left_counts;	// concatenate left count into int32_t to return
-    sei();
-    SREG = sreg;
+    //sei();
+    //SREG = sreg;
     return ret_val;
 }
 
@@ -97,13 +96,14 @@ int32_t Counts_Right()
     // Note: Interrupts can trigger during a function call and an int32 requires
     // multiple clock cycles to read/save. You may want to stop interrupts, copy the value,
     // and re-enable interrupts to prevent this from corrupting your read/write.
-    unsigned char sreg;
-    sreg = SREG;
-    cli();	// disable interrupts
-    int32_t ret_val = _right_counts;	// concatenate right count into int32_t to return
-    sei();
-    SREG = sreg;
-    return ret_val;
+    //unsigned char sreg;
+    //sreg = SREG;
+    //cli();	// disable interrupts
+
+    //int32_t ret_val = _rdight_counts;	// concatenate right count into int32_t to return
+    //sei();
+    //SREG = sreg;
+    return _right_counts;
 }
 
 /**
@@ -137,11 +137,15 @@ float Rad_Right()
  */
 ISR(PCINT0_vect)
 {
-	if (Left_XOR() == _last_left_XOR) ;
-	else if (Left_XOR() != _last_left_XOR) {
-		if ((Left_A() && Left_XOR()) != Left_B()) _left_counts++; // if A leads B, motor drives forward
-		else _left_counts--;  // else, backward
+	if (_last_left_XOR != Left_XOR()) {
+		_left_counts += (_last_left_B^Left_A()) - (_last_left_A^Left_B());
+
+		_last_left_A = Left_A();
+		_last_left_B = Left_B();
+		_last_left_XOR = Left_XOR();
+		return;
 	}
+	else return;	
 }
 
 
@@ -151,6 +155,9 @@ ISR(PCINT0_vect)
  */
 ISR(INT6_vect)
 {
-	if ((Right_A() && Right_XOR()) != Right_B()) _right_counts++;
-	else _right_counts--;
+	_right_counts += (_last_right_B ^ Right_A()) - (_last_right_A ^ Right_B());
+
+	_last_right_A = Right_A();
+	_last_right_B = Right_B();
+	return;
 }
