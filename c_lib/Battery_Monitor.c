@@ -43,12 +43,13 @@ float Battery_Voltage()
     sreg = SREG;
     cli();	// disable interrupts
     ADCSRA |= (1 << ADSC);
-    while(ADSC) {
-	;
+    while(1) {
+        if (ADCSRA & (1 << ADIF)) {
+    		data.split.LSB = ADCL;
+    		data.split.MSB = ADCH;
+    		sei();	// re enable interrupts
+    		SREG = sreg;
+    		return data.value * BITS_TO_BATTERY_VOLTS *2.56 / 1023;
+	}
     }
-    data.split.LSB = ADCL;
-    data.split.MSB = ADCH;
-    sei();	// re enable interrupts
-    SREG = sreg;
-    return data.value * BITS_TO_BATTERY_VOLTS *2.56 / 1023;
 }
