@@ -1,10 +1,12 @@
 #include <avr/interrupt.h>
+#include <stdbool.h>
 #include "Battery_Monitor.h"
 #include "Filter.h"
 
 static const float BITS_TO_BATTERY_VOLTS = 2*2.56/1023;
 
 static Filter_Data_t Battery_Filter;
+bool first_voltage;
 
 /**
  * Function Battery_Monitor_Init initializes the Battery Monitor to record the current battery voltages.
@@ -18,9 +20,10 @@ void Battery_Monitor_Init()
     ADMUX |= (1 << REFS0) | (1 << REFS1); 			// AVcc w/ external capacitor on AREF
     // TODO Need to determine numerator and denominator coefficients
     int filter_order = 4;
-    float numerator[] = {0.09, 0.4, 0.6, 0.4, 0.09};  
-    float denominator[] = {1.0, 0.0, 0.5, 0.0, 0.02};
+    float numerator[] = {0.0, 0.091646653142, 0.353160775308, 0.131207565573, 0.004796803973};  
+    float denominator[] = {1.0, -0.627579402049, 0.267733142186, -0.066736038563, 0.007394096422};
     Filter_Init(&Battery_Filter, numerator, denominator, filter_order+1);
+    first_voltage = true;
 }
 
 /**
@@ -37,7 +40,7 @@ float Battery_Voltage()
     //data.split.MSB = ADCH;
     //voltage = Filter_Value(&Battery_Filter, data.value);
     //return data.value * BITS_TO_BATTERY_VOLTS;
-
+    float voltage;
     unsigned char sreg;
     sreg = SREG;
     cli();	// disable interrupts
@@ -49,7 +52,14 @@ float Battery_Voltage()
 		//break;
 		sei();	// re-enable interrupts
     		SREG = sreg;
-    		return Filter_Value(&Battery_Filter, data.value * BITS_TO_BATTERY_VOLTS);
+		break;
 	}
     }
+    voltage = data.value * BITS_TO_BATTERY_VOLTS;
+    if (first_voltage) {
+	    Filter_SetTo(&Battery_Filter, voltage);
+	    first_voltage = false;
+    }
+    return Filter_Value(&Battery_Filter, voltage);
 }
+
