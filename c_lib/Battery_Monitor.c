@@ -4,7 +4,7 @@
 
 static const float BITS_TO_BATTERY_VOLTS = 2*2.56/1023;
 
-//static Filter_Data_t Battery_Filter;
+static Filter_Data_t Battery_Filter;
 
 /**
  * Function Battery_Monitor_Init initializes the Battery Monitor to record the current battery voltages.
@@ -17,10 +17,10 @@ void Battery_Monitor_Init()
     ADCSRA |= (1 << ADPS0) | (1 << ADPS1) | (1 << ADPS2); 	// divider value of 128
     ADMUX |= (1 << REFS0) | (1 << REFS1); 			// AVcc w/ external capacitor on AREF
     // TODO Need to determine numerator and denominator coefficients
-    //int filter_order = 4;
-    //float numerator[] = {5, 0, 0, 0, 0};  
-    //float denominator[] = {1, 1, 1, 1, 1};
-    //Fiter_Init(&Battery_Filter, numerator, denominator, filter_order+1);
+    int filter_order = 4;
+    float numerator[] = {0.09, 0.4, 0.6, 0.4, 0.09};  
+    float denominator[] = {1.0, 0.0, 0.5, 0.0, 0.02};
+    Filter_Init(&Battery_Filter, numerator, denominator, filter_order+1);
 }
 
 /**
@@ -49,7 +49,7 @@ float Battery_Voltage()
 		//break;
 		sei();	// re-enable interrupts
     		SREG = sreg;
-    		return data.value * BITS_TO_BATTERY_VOLTS;
+    		return Filter_Value(&Battery_Filter, data.value * BITS_TO_BATTERY_VOLTS);
 	}
     }
 }
