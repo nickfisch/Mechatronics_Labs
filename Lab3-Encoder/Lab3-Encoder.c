@@ -32,6 +32,7 @@
 #include "../c_lib/Timing.h"
 #include "../c_lib/Encoder.h"
 #include "../c_lib/Battery_Monitor.h"
+#include "../c_lib/Filter.h"
 #include "../c_lib/MEGN540_MessageHandeling.h"
 
 /** Main program entry point. This routine configures the hardware required by the application, then
@@ -68,6 +69,7 @@ int main(void)
     Time_t FilterTimer = GetTime();
  
     // initiate battery filter
+    bool first_voltage = true;
     Filter_Data_t Battery_Filter;
     int filter_order = 4;
     float numerator[] = {0.0, 0.0, 0.0, 0.0, 15585454.5645504};  
@@ -158,9 +160,11 @@ int main(void)
         if( SecondsSince(&FilterTimer) >= 0.002){
             FilterTimer = GetTime();
             voltage = Battery_Voltage();
-            first_voltage = true;
-            
-            filteredVoltage = voltage;
+            if (first_voltage) {
+                Filter_SetTo(&Battery_Filter, voltage);
+                first_voltage = false;
+            }
+            filteredVoltage = Filter_Value(&Battery_Filter, voltage);;
         }
         msg.volt = filteredVoltage;
         
