@@ -51,12 +51,21 @@ int main(void)
     // variable needed for mf_loop_timer
     bool firstCall = true;
 
+    // Low battery warning variable
     struct __attribute__((__packed__)) { char let[7]; float volt; } msg = {
         .let = {'B','A','T',' ','L','O','W'},
         .volt = 0
     };
-    float vol;
+    
+    // voltage variables
+    float voltage;
+    float filteredVoltage;
+    
+    // timer for low warning check
     Time_t BatWarnTimeCheck = GetTime();
+    
+    // timer for filter
+    Time_t FilterTimer = GetTime();
     
     while( true ) {
         USB_Upkeep_Task();
@@ -138,10 +147,22 @@ int main(void)
             }
         }
         // float for battery volatage
-        vol = Battery_Voltage();
-        msg.volt = vol;
+        if( SecondsSince(&FilterTimer) == 2){
+            FilterTimer = GetTime();
+            voltage = Battery_Voltage();
+            // TODO Need to determine numerator and denominator coefficients
+            //int filter_order = 4;
+            //float numerator[] = {0.0, 0.091646653142, 0.353160775308, 0.131207565573, 0.004796803973};  
+            //float denominator[] = {1.0, -0.627579402049, 0.267733142186, -0.066736038563, 0.007394096422};
+            //Filter_Init(&Battery_Filter, numerator, denominator, filter_order+1);
+            //first_voltage = true;
+            
+            filteredVoltage = voltage;
+        }
+        msg.volt = filteredVoltage;
+        
         if ( MSG_FLAG_Execute( &mf_battery_voltage ) ) {
-            usb_send_msg("cf", 'V', &vol, sizeof(vol));
+            usb_send_msg("cf", 'V', &filteredVoltage, sizeof(filteredVoltage));
             //set variables for future calls
             mf_battery_voltage.last_trigger_time = GetTime();
             if (mf_battery_voltage.duration <= 0){
@@ -149,10 +170,6 @@ int main(void)
             }
         }
         
-        //if ( vol >= 3.6) {
-        
-        //}
-        //else 
         if( SecondsSince(&BatWarnTimeCheck) == 10){
             BatWarnTimeCheck = GetTime();
             if (vol < 3.6 && vol >= 2.1){
@@ -160,8 +177,5 @@ int main(void)
                 usb_send_msg("c7sf", '!', &msg, sizeof(msg));
             }
         }
-        //else{
-            
-        //}
    }
 }
