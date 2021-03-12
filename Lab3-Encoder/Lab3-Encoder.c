@@ -51,6 +51,12 @@ int main(void)
     // variable needed for mf_loop_timer
     bool firstCall = true;
 
+    struct __attribute__((__packed__)) { char let[7]; float volt; } msg = {
+        .let = {'B','A','T',' ','L','O','W'},
+        .volt = 0
+    };
+    float vol;
+    
     while( true )
    {
         USB_Upkeep_Task();
@@ -131,9 +137,10 @@ int main(void)
                 mf_encoder_count.active = false;
             }
         }
-        
+        // float for battery volatage
+        vol = Battery_Voltage();
+        msg.volt = vol;
         if ( MSG_FLAG_Execute( &mf_battery_voltage ) ) {
-            float vol = Battery_Voltage();
             usb_send_msg("cf", 'V', &vol, sizeof(vol));
             //set variables for future calls
             mf_battery_voltage.last_trigger_time = GetTime();
@@ -142,8 +149,16 @@ int main(void)
             }
         }
         
-        if ( MSG_FLAG_Execute( &mf_battery_voltage_low ) ) {
+        //if ( vol >= 3.6) {
+        
+        //}
+        //else 
+        if (vol < 3.6 && vol >= 2.1){
             // send low battery warning
+            usb_send_msg("c7sf", '!', &msg, sizeof(msg));
         }
+        //else{
+            
+        //}
    }
 }
