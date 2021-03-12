@@ -28,12 +28,15 @@
 
 */
 
+#include <stdbool.h>
+
 #include "../c_lib/SerialIO.h"
 #include "../c_lib/Timing.h"
 #include "../c_lib/Encoder.h"
 #include "../c_lib/Battery_Monitor.h"
 #include "../c_lib/Filter.h"
 #include "../c_lib/MEGN540_MessageHandeling.h"
+#include "../c_lib/Filter.h"
 
 /** Main program entry point. This routine configures the hardware required by the application, then
  *  enters a loop to run the application tasks in sequence.
@@ -59,7 +62,7 @@ int main(void)
     };
     
     // voltage variables
-    float voltage = Battery_Voltage();
+    float raw_voltage = Battery_Voltage();
     float filteredVoltage;
     
     // timer for low warning check
@@ -69,13 +72,15 @@ int main(void)
     Time_t FilterTimer = GetTime();
  
     // initiate battery filter
-    bool first_voltage = true;
     Filter_Data_t Battery_Filter;
+    bool first_voltage;
     int filter_order = 4;
     float numerator[] = {0.0, 0.0, 0.0, 0.0, 15585454.5645504};  
     float denominator[] = {1.0, 196.282935121689, 17337.1457789933, 794030.034031126};
+    
     Filter_Init(&Battery_Filter, numerator, denominator, filter_order+1);
-            
+    first_voltage = true;
+
     while( true ) {
         USB_Upkeep_Task();
 
@@ -156,18 +161,21 @@ int main(void)
             }
         }
         
-        // float for battery volatage
-        if( SecondsSince(&FilterTimer) >= 0.002){
+        // updates the battery voltage every 2 ms
+        if( SecondsSince(&FilterTimer) >= 0.002) {
             FilterTimer = GetTime();
-            voltage = Battery_Voltage();
+            raw_voltage = Battery_Voltage();
             if (first_voltage) {
-                Filter_SetTo(&Battery_Filter, voltage);
+                Filter_SetTo(&Battery_Filter, raw_voltage);
                 first_voltage = false;
-            }
-            filteredVoltage = Filter_Value(&Battery_Filter, voltage);;
+    	    }
+
+            filteredVoltage = Filter_Value(&Battery_Filter, raw_voltage);
         }
+
         msg.volt = filteredVoltage;
         
+	// checks battery message flag
         if ( MSG_FLAG_Execute( &mf_battery_voltage ) ) {
             usb_send_msg("cf", 'V', &filteredVoltage, sizeof(filteredVoltage));
             //set variables for future calls
@@ -177,9 +185,11 @@ int main(void)
             }
         }
         
+	// Low battery check every 10 seconds
         if( SecondsSince(&BatWarnTimeCheck) >= 10){
             BatWarnTimeCheck = GetTime();
-            if (filteredVoltage < 3.6 && filteredVoltage >= 2.1){
+	    float voltage_check = Filter_Last_Output(&Battery_Filter); 
+            if (voltage_check < 3.6 && voltage_check >= 2.1){
                 // send low battery warning
                 usb_send_msg("c7sf", '!', &msg, sizeof(msg));
             }

@@ -5,9 +5,6 @@
 
 static const float BITS_TO_BATTERY_VOLTS = 2*2.56/1023;
 
-//static Filter_Data_t Battery_Filter;
-//bool first_voltage;
-
 /**
  * Function Battery_Monitor_Init initializes the Battery Monitor to record the current battery voltages.
  */
@@ -52,10 +49,5 @@ float Battery_Voltage()
     }
     voltage = data.value * BITS_TO_BATTERY_VOLTS;
     return voltage;
-    //if (first_voltage) {
-	    //Filter_SetTo(&Battery_Filter, voltage);
-	    //first_voltage = false;
-    //}
-    //return Filter_Value(&Battery_Filter, voltage);
 }
 
