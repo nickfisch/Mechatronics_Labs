@@ -56,9 +56,9 @@ int main(void)
         .volt = 0
     };
     float vol;
+    Time_t BatWarnTimeCheck = GetTime();
     
-    while( true )
-   {
+    while( true ) {
         USB_Upkeep_Task();
 
         //USB_Echo_Task();// you'll want to remove this once you get your serial sorted
@@ -153,9 +153,12 @@ int main(void)
         
         //}
         //else 
-        if (vol < 3.6 && vol >= 2.1){
-            // send low battery warning
-            usb_send_msg("c7sf", '!', &msg, sizeof(msg));
+        if( SecondsSince(&BatWarnTimeCheck) == 10){
+            BatWarnTimeCheck = GetTime();
+            if (vol < 3.6 && vol >= 2.1){
+                // send low battery warning
+                usb_send_msg("c7sf", '!', &msg, sizeof(msg));
+            }
         }
         //else{
             
