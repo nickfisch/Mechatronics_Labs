@@ -66,7 +66,14 @@ int main(void)
     
     // timer for filter
     Time_t FilterTimer = GetTime();
-    
+ 
+    // initiate battery filter
+    Filter_Data_t Battery_Filter;
+    int filter_order = 4;
+    float numerator[] = {0.0, 0.0, 0.0, 0.0, 15585454.5645504};  
+    float denominator[] = {1.0, 196.282935121689, 17337.1457789933, 794030.034031126};
+    Filter_Init(&Battery_Filter, numerator, denominator, filter_order+1);
+            
     while( true ) {
         USB_Upkeep_Task();
 
@@ -150,12 +157,7 @@ int main(void)
         if( SecondsSince(&FilterTimer) == 2){
             FilterTimer = GetTime();
             voltage = Battery_Voltage();
-            // TODO Need to determine numerator and denominator coefficients
-            //int filter_order = 4;
-            //float numerator[] = {0.0, 0.091646653142, 0.353160775308, 0.131207565573, 0.004796803973};  
-            //float denominator[] = {1.0, -0.627579402049, 0.267733142186, -0.066736038563, 0.007394096422};
-            //Filter_Init(&Battery_Filter, numerator, denominator, filter_order+1);
-            //first_voltage = true;
+            first_voltage = true;
             
             filteredVoltage = voltage;
         }
