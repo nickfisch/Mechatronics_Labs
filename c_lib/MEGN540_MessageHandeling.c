@@ -333,11 +333,7 @@ uint8_t MEGN540_Message_Len( char cmd )
         case '*': return	9; break;
         case '/': return	9; break;
         case '+': return	9; break;
-<<<<<<< HEAD
-        case '-': return    	9; break;
-=======
         case '-': return	9; break;
->>>>>>> b7a101e7e6695fe2cfbd150245985ace5cbaf6a6
         case 't': return	2; break;
         case 'T': return	6; break;
         case 'e': return	1; break;
@@ -357,16 +353,9 @@ uint8_t MEGN540_Message_Len( char cmd )
         case 'q': return	1; break;
         case 'Q': return 	5; break;
         case 'd': return 	9; break;
-<<<<<<< HEAD
-        case 'D': return  	13; break;
-        case 'v': return	1; break;
-        case 'V': return	5; break;
-        default:  return    	0; break;
-=======
         case 'D': return	13; break;
         case 'v': return	9; break;
         case 'V': return	13; break;
         default:  return	0; break;
->>>>>>> b7a101e7e6695fe2cfbd150245985ace5cbaf6a6
     }
 }
