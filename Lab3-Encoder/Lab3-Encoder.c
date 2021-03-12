@@ -29,6 +29,7 @@
 */
 
 #include <stdbool.h>
+#include <float.h>
 
 #include "../c_lib/SerialIO.h"
 #include "../c_lib/Timing.h"
@@ -74,10 +75,8 @@ int main(void)
     Filter_Data_t Battery_Filter;
     bool first_voltage;
     int filter_order = 4;
-    //float numerator[] = {0.0, 0.0, 0.0, 0.0, 15585454.5645504};  
-    //float denominator[] = {1.0, 196.282935121689, 17337.1457789933, 794030.034031126, 15585454.5645504};
-    float numerator[] = {0.0, 0.999999999999999, 1.29622953831734e-18, 3.59331193656159e-36, -1.15929453215541e-60};  
-    float denominator[] = {1, 7.4246034962957e-19, 1.35736528211796e-36, 1.41016301495335e-61, 5.6938286148506e-86};
+    float numerator[] = {0, 0.999999999999999, 1.29622953831734e-18, 3.59331193656159e-36, -FLT_MIN}; // last 'actual' value: -1.15929453215541e-60  
+    float denominator[] = {1, 7.4246023962657e-19, 1.35726528211796e-36, FLT_MIN, FLT_MIN}; // last 2 'actual' values: 1.41016301495335e-61, 5.6938286148406e-86
 
     Filter_Init(&Battery_Filter, numerator, denominator, filter_order+1);
     first_voltage = true;
