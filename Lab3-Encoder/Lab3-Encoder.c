@@ -172,7 +172,7 @@ int main(void)
         
         if( SecondsSince(&BatWarnTimeCheck) == 10){
             BatWarnTimeCheck = GetTime();
-            if (vol < 3.6 && vol >= 2.1){
+            if (filteredVoltage < 3.6 && filteredVoltage >= 2.1){
                 // send low battery warning
                 usb_send_msg("c7sf", '!', &msg, sizeof(msg));
             }
