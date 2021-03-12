@@ -58,7 +58,7 @@ int main(void)
     };
     
     // voltage variables
-    float voltage;
+    float voltage = Battery_Voltage();
     float filteredVoltage;
     
     // timer for low warning check
@@ -153,8 +153,9 @@ int main(void)
                 mf_encoder_count.active = false;
             }
         }
+        
         // float for battery volatage
-        if( SecondsSince(&FilterTimer) == 2){
+        if( SecondsSince(&FilterTimer) >= 0.002){
             FilterTimer = GetTime();
             voltage = Battery_Voltage();
             first_voltage = true;
@@ -172,7 +173,7 @@ int main(void)
             }
         }
         
-        if( SecondsSince(&BatWarnTimeCheck) == 10){
+        if( SecondsSince(&BatWarnTimeCheck) >= 10){
             BatWarnTimeCheck = GetTime();
             if (filteredVoltage < 3.6 && filteredVoltage >= 2.1){
                 // send low battery warning
