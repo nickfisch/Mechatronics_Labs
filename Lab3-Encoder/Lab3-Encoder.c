@@ -75,8 +75,12 @@ int main(void)
     Filter_Data_t Battery_Filter;
     bool first_voltage;
     int filter_order = 4;
-    float numerator[] = {0, 0.999999999999999, 1.29622953831734e-18, 3.59331193656159e-36, -FLT_MIN}; // last 'actual' value: -1.15929453215541e-60  
-    float denominator[] = {1, 7.4246023962657e-19, 1.35726528211796e-36, FLT_MIN, FLT_MIN}; // last 2 'actual' values: 1.41016301495335e-61, 5.6938286148406e-86
+    /* MatLab code */
+    // [b,a] = besself(4,6*2*pi)
+    // [b,a] = tfdata(c2d(tf(b,a),1)
+    // numerator = b{1}, denominator = a{1}
+    float numerator[] = {0, 1.00000000002831, -6.2016614795055e-18, 7.98934716362488e-22, -7.81462568477543e-37}; // last 'actual' value: 
+    float denominator[] = {1, -3.44897255468215e-11, 3.01641584463356e-22, 6.53851093191958e-37, FLT_MIN}; // last 'actual' value: 7.13251396854483e-52
 
     Filter_Init(&Battery_Filter, numerator, denominator, filter_order+1);
     first_voltage = true;

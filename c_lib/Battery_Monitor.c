@@ -1,5 +1,4 @@
 #include <avr/interrupt.h>
-#include <stdbool.h>
 #include "Battery_Monitor.h"
 #include "Filter.h"
 
@@ -52,10 +51,6 @@ float Battery_Voltage()
     }
     voltage = data.value * BITS_TO_BATTERY_VOLTS;
     return voltage;
-    //if (first_voltage) {
-	    //Filter_SetTo(&Battery_Filter, voltage);
-	    //first_voltage = false;
-    //}
-    //return Filter_Value(&Battery_Filter, voltage);
+        //return Filter_Value(&Battery_Filter, voltage);
 }
 
