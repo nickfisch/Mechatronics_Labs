@@ -35,6 +35,7 @@
 #include "../c_lib/Timing.h"
 #include "../c_lib/Encoder.h"
 #include "../c_lib/Battery_Monitor.h"
+#include "../c_lib/Filter.h"
 #include "../c_lib/MEGN540_MessageHandeling.h"
 #include "../c_lib/Filter.h"
 
@@ -101,6 +102,7 @@ int main(void)
             Message_Handling_Init(); 
         }   
         
+        // checks send time message flag
         if ( MSG_FLAG_Execute( &mf_send_time ) ) {
             // variable for current time
             float timer0 = GetTimeSec();
@@ -113,6 +115,7 @@ int main(void)
             }
         } 
         
+        // checks float timer message flag
         if ( MSG_FLAG_Execute( &mf_time_float_send ) ) {
             // time structure for calling secconds since with
             Time_t sentTime = GetTime();
@@ -132,6 +135,7 @@ int main(void)
             }
         } 
         
+        // checks loop timer message flag
         if ( MSG_FLAG_Execute( &mf_loop_timer ) || !firstCall ) {
             if(firstCall){
                 startTime = GetTime();
@@ -152,6 +156,7 @@ int main(void)
             
         } 
         
+        // checks encoder message flag
         if ( MSG_FLAG_Execute( &mf_encoder_count ) ) {
             struct __attribute__((__packed__)) { float cleft; float cright; } data;
             data.cleft = Counts_Left();
@@ -168,18 +173,18 @@ int main(void)
         // updates the battery voltage every 2 ms
         if( SecondsSince(&FilterTimer) >= 0.002) {
             FilterTimer = GetTime();
-	    raw_voltage = Battery_Voltage();
+            raw_voltage = Battery_Voltage();
             if (first_voltage) {
-	    	Filter_SetTo(&Battery_Filter, raw_voltage);
-	    	first_voltage = false;
+                Filter_SetTo(&Battery_Filter, raw_voltage);
+                first_voltage = false;
     	    }
 
-	    filteredVoltage = Filter_Value(&Battery_Filter, raw_voltage);
+            filteredVoltage = Filter_Value(&Battery_Filter, raw_voltage);
         }
 
         msg.volt = filteredVoltage;
         
-	// checks battery message flag
+        // checks battery message flag
         if ( MSG_FLAG_Execute( &mf_battery_voltage ) ) {
             usb_send_msg("cf", 'V', &filteredVoltage, sizeof(filteredVoltage));
             //set variables for future calls
@@ -189,7 +194,7 @@ int main(void)
             }
         }
         
-	// Low battery check every 10 seconds
+        // Low battery check every 10 seconds
         if( SecondsSince(&BatWarnTimeCheck) >= 10){
             BatWarnTimeCheck = GetTime();
 	    float voltage_check = Filter_Last_Output(&Battery_Filter); 
