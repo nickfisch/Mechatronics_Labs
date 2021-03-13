@@ -25,12 +25,6 @@ float Battery_Voltage()
     union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
 
     // *** MEGN540 LAB3 YOUR CODE HERE ***
-    //uint16_t voltage = 0;
-    //data.split.LSB = ADCL;
-    //data.split.MSB = ADCH;
-    //voltage = Filter_Value(&Battery_Filter, data.value);
-    //return data.value * BITS_TO_BATTERY_VOLTS;
-    
     float voltage;
     unsigned char sreg;
     sreg = SREG;
@@ -40,17 +34,12 @@ float Battery_Voltage()
         if (ADCSRA & (1 << ADIF)) {
     		data.split.LSB = ADCL;
     		data.split.MSB = ADCH;
-            //break;
-            sei();	// re-enable interrupts
+        	sei();	// re-enable interrupts
     		SREG = sreg;
-            break;
+        	break;
         }
     }
     voltage = data.value * BITS_TO_BATTERY_VOLTS;
     return voltage;
-<<<<<<< HEAD
-        //return Filter_Value(&Battery_Filter, voltage);
-=======
->>>>>>> 797570b18ecce776d7cc8c3df80f5664d8e849b5
 }
 
