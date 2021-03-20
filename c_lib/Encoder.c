@@ -15,17 +15,17 @@ static volatile int32_t _left_counts;   // Static limits it's use to this file
 static volatile int32_t _right_counts;  // Static limits it's use to this file
 
 /** Helper Funcions for Accessing Bit Information */
-// *** MEGN540 Lab 3 TODO ***
+// *** MEGN540 Lab 3 ***
 // Hint, use avr's bit_is_set function to help
 // bit_is_set(register, bit) returns true if the bit register argument is true 
 // inline has the compiler makes the function call 'replaced' with the funciton contents
-static inline bool Right_XOR() { return bit_is_set(PINE, PE6); } // MEGN540 Lab 3 TODO
-static inline bool Right_B()   { return bit_is_set(PINF, PF0); } // MEGN540 Lab 3 TODO
-static inline bool Right_A()   { return (Right_XOR()^Right_B()); } // MEGN540 Lab 3 TODO
+static inline bool Right_XOR() { return bit_is_set(PINE, PE6); } // MEGN540 Lab 3
+static inline bool Right_B()   { return bit_is_set(PINF, PF0); } // MEGN540 Lab 3
+static inline bool Right_A()   { return (Right_XOR()^Right_B()); } // MEGN540 Lab 3
 
-static inline bool Left_XOR() { return bit_is_set(PINB, PB4); } // MEGN540 Lab 3 TODO 
-static inline bool Left_B()   { return bit_is_set(PINE, PE2); } // MEGN540 Lab 3 TODO
-static inline bool Left_A()   { return (Left_XOR()^Left_B()); } // MEGN540 Lab 3 TODO
+static inline bool Left_XOR() { return bit_is_set(PINB, PB4); } // MEGN540 Lab 3 
+static inline bool Left_B()   { return bit_is_set(PINE, PE2); } // MEGN540 Lab 3
+static inline bool Left_A()   { return (Left_XOR()^Left_B()); } // MEGN540 Lab 3
 
 /**
  * Function Encoders_Init initializes the encoders, sets up the pin change interrupts, and zeros the initial encoder
@@ -48,14 +48,14 @@ void Encoders_Init()
 
 
     // Initialize static file variables. These probably need to be updated.
-    _last_right_A = 0;  // MEGN540 Lab 3 TODO
-    _last_right_B = 0;  // MEGN540 Lab 3 TODO
-    _last_left_A = 0;  // MEGN540 Lab 3 TODO
-    _last_left_B = 0;  // MEGN540 Lab 3 TODO
-    _last_left_XOR = 0;  // MEGN540 Lab 3 TODO
+    _last_right_A = 0;  // MEGN540 Lab 3
+    _last_right_B = 0;  // MEGN540 Lab 3
+    _last_left_A = 0;  // MEGN540 Lab 3
+    _last_left_B = 0;  // MEGN540 Lab 3   
+    _last_left_XOR = 0;  // MEGN540 Lab 3 
 
-    _left_counts = 0;  // MEGN540 Lab 3 TODO
-    _right_counts = 0;  // MEGN540 Lab 3 TODO
+    _left_counts = 0;  // MEGN540 Lab 3 
+    _right_counts = 0;  // MEGN540 Lab 3
 
     EICRB |= (1 << ISC60); 	// enable trigger on any logic change on INT6
     EIMSK |= (1 << INT6);	// triggered inputs on right encoder

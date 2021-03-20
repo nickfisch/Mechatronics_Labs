@@ -10,10 +10,10 @@ static const float BITS_TO_BATTERY_VOLTS = 2*2.56/1023;
 void Battery_Monitor_Init()
 {
 	// *** MEGN540 LAB3 YOUR CODE HERE ***
-    ADCSRA |= (1 << ADEN);			// enables ADC ADMUX = 0100110
+    ADCSRA |= (1 << ADEN);			// enables ADC 
     ADMUX |= (1 << MUX2) | (1 << MUX1); 	// MUX sets ADC6 as input ADEN enables analog to digital conversion
     ADCSRA |= (1 << ADPS0) | (1 << ADPS1) | (1 << ADPS2); 	// divider value of 128
-    ADMUX |= (1 << REFS0) | (1 << REFS1); 			// AVcc w/ external capacitor on AREF
+    ADMUX |= (1 << REFS0) | (1 << REFS1); 			// 2.56 reference voltage w/ external capacitor on AREF
 }
 
 /**
