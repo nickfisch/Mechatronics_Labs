@@ -82,6 +82,9 @@ void Message_Handling_Init()
     MSG_FLAG_Init( &mf_send_time );
     MSG_FLAG_Init( &mf_encoder_count );
     MSG_FLAG_Init( &mf_battery_voltage );
+    MSG_FLAG_Init( &mf_set_PWM ); 
+    MSG_FLAG_Init( &mf_stop_PWM );
+    MSG_FLAG_Init( &mf_send_sys ); 
     return;
 }
 
@@ -163,52 +166,62 @@ void Message_Handling_Task()
             if( usb_msg_length() >= MEGN540_Message_Len('e') )
             {
                 usb_msg_get();
-                
                 mf_encoder_count.active = true;
             }
             break;
         case 'E':
             if( usb_msg_length() >= MEGN540_Message_Len('E') )
             {
-                usb_msg_get();
-                // float for calculating duration
-                float dur;
-                usb_msg_read_into(&dur, sizeof(dur));
-                // switch to see witch type of call it is
-                if (dur <= 0) {
-                    mf_encoder_count.active = false;
-                    mf_encoder_count.duration = -1;
-                    break;
-                }
-                mf_encoder_count.active = true;
-                mf_encoder_count.duration = dur/1000;
-                break;
+                ECase(command);
             }
             break;
         case 'b':
             if( usb_msg_length() >= MEGN540_Message_Len('b') )
             {
                 usb_msg_get();
-                
                 mf_battery_voltage.active = true;
             }
             break;
         case 'B':
             if( usb_msg_length() >= MEGN540_Message_Len('B') )
             {
+                BCase(command);
+            }
+            break;
+        case 'p':
+            if( usb_msg_length() >= MEGN540_Message_Len('p') )
+            {
                 usb_msg_get();
-                // float for calculating duration
-                float dur;
-                usb_msg_read_into(&dur, sizeof(dur));
-                // switch to see witch type of call it is
-                if (dur <= 0) {
-                    mf_battery_voltage.active = false;
-                    mf_battery_voltage.duration = -1;
-                    break;
-                }
-                mf_battery_voltage.active = true;
-                mf_battery_voltage.duration = dur/1000;
-                break;
+            }
+            break;
+        case 'P':
+            if( usb_msg_length() >= MEGN540_Message_Len('P') )
+            {
+                usb_msg_get();
+            }
+            break;
+        case 's':
+            if( usb_msg_length() >= MEGN540_Message_Len('s') )
+            {
+                usb_msg_get();
+            }
+            break;
+        case 'S':
+            if( usb_msg_length() >= MEGN540_Message_Len('S') )
+            {
+                usb_msg_get();
+            }
+            break;
+        case 'q':
+            if( usb_msg_length() >= MEGN540_Message_Len('q') )
+            {
+                usb_msg_get();
+            }
+            break;
+        case 'Q':
+            if( usb_msg_length() >= MEGN540_Message_Len('Q') )
+            {
+                usb_msg_get();
             }
             break;
         default:
@@ -317,6 +330,36 @@ void TCase(char command){
             usb_send_msg("c", command, "?", sizeof("?"));
             return;
     }
+}
+
+void ECase(char command){
+    usb_msg_get();
+    // float for calculating duration
+    float dur;
+    usb_msg_read_into(&dur, sizeof(dur));
+    // switch to see witch type of call it is
+    if (dur <= 0) {
+        mf_encoder_count.active = false;
+        mf_encoder_count.duration = -1;
+        return;
+    }
+    mf_encoder_count.active = true;
+    mf_encoder_count.duration = dur/1000;
+}
+
+void BCase(char command){
+    usb_msg_get();
+    // float for calculating duration
+    float dur;
+    usb_msg_read_into(&dur, sizeof(dur));
+    // switch to see witch type of call it is
+    if (dur <= 0) {
+        mf_battery_voltage.active = false;
+        mf_battery_voltage.duration = -1;
+        return;
+    }
+    mf_battery_voltage.active = true;
+    mf_battery_voltage.duration = dur/1000;
 }
 
 /**
