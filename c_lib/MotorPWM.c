@@ -70,6 +70,8 @@ void Motor_PWM_Init( uint16_t MAX_PWM )
 	TCCR3B |= (1 << WGM13);		// frequecy correct mode
 	TCCR1B |= (1 << CS10);		// no prescaling
 	TCCR3A |= (1 << COM1A1) | (1 << COM1B1);	// set OC1A and OC1B as outputs from right and left motors
+
+	Set_MAX_Motor_PWM(MAX_PWM);
 }
 /**
  * Function MotorPWM_Enable enables or disables the motor PWM outputs.

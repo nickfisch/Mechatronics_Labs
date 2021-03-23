@@ -192,6 +192,17 @@ void Message_Handling_Task()
             if( usb_msg_length() >= MEGN540_Message_Len('p') )
             {
                 usb_msg_get();
+		// float for calculating duration
+   		int16_t dur;
+   		usb_msg_read_into(&dur, sizeof(dur)); 	// get first pwm value for the left motor
+		if (Battery_Voltage() > 4.75) {		// check that the voltage is high enough for Motors
+			if (!Is_Motor_PWM_Enabled()) Motor_PWM_Enable(1);
+			Motor_PWM_Left(dur);
+			usb_msg_read_into(&dur, sizeof(dur));
+			Motor_PWM_Right(dur);
+			
+		} else Motor_PWM_Enable(0);
+
             }
             break;
         case 'P':

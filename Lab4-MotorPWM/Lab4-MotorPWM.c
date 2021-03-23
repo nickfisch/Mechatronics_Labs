@@ -20,7 +20,8 @@ int main(void)
     USB_SetupHardware();
     GlobalInterruptEnable();
     Message_Handling_Init(); // initialize message handling
-    
+    Motor_PWM_Init(380);	// initiate the PWM top to 380, for a frequency of 21 kHz
+
     // variable needed for timing the while loop
     Time_t startTime;
     // variable needed for mf_loop_timer
