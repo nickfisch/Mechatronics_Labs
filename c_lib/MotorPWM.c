@@ -89,7 +89,7 @@ bool Is_Motor_PWM_Enabled()
 	if ( bit_is_set(DDRB, DDB5) && bit_is_set(DDRB, DDB6)) return true;
 	else return false;
 }
-/**
+/*
  * Function Motor_PWM_Left sets the PWM duty cycle for the left motor.
  * @return [int32_t] The count number.
  */
