@@ -8,6 +8,7 @@
 #include "../c_lib/Filter.h"
 #include "../c_lib/MEGN540_MessageHandeling.h"
 #include "../c_lib/Filter.h"
+#include "../c_lib/MotorPWM.h"
 
 /** Main program entry point. This routine configures the hardware required by the application, then
  *  enters a loop to run the application tasks in sequence.
@@ -185,8 +186,24 @@ int main(void)
             mf_set_PWM.last_trigger_time = GetTime();
             if (mf_set_PWM.duration <= 0){
                 mf_set_PWM.active = false;
+		break;
             }
+	    // check that the voltage is high enough for Motors
+   	    //usb_msg_read_into(&data.value, sizeof(data.value)); 	// get first pwm value for the left motor
+
+            if (Battery_Voltage() > 4.75) {		
+	           if (!Is_Motor_PWM_Enabled()) Motor_PWM_Enable(1);
+	           Motor_PWM_Left(PWM_data.split.left_PWM);	// set the left motor PWM
+	           Motor_PWM_Right(PWM_data.split.right_PWM);	// set the right motor PWM
+	    } else Motor_PWM_Enable(0);	// if the battery voltage is below 4.75V, turn off motors
+        }
+        
+        // checks stop PWM message flag
+        if ( MSG_FLAG_Execute( &mf_stop_PWM ) ) {
+            //set variables for future calls
+            mf_stop_PWM.last_trigger_time = GetTime();
             
+
             
         }
         

@@ -30,6 +30,7 @@
 
 #include "MEGN540_MessageHandeling.h"
 #include "../c_lib/SerialIO.h"
+#include "../c_lib/MotorPWM.h"
 
 
 static inline void MSG_FLAG_Init(MSG_FLAG_t* p_flag)
@@ -192,23 +193,23 @@ void Message_Handling_Task()
             if( usb_msg_length() >= MEGN540_Message_Len('p') )
             {
                 usb_msg_get();
-		// float for calculating duration
-   		int16_t dur;
-   		usb_msg_read_into(&dur, sizeof(dur)); 	// get first pwm value for the left motor
-		if (Battery_Voltage() > 4.75) {		// check that the voltage is high enough for Motors
-			if (!Is_Motor_PWM_Enabled()) Motor_PWM_Enable(1);
-			Motor_PWM_Left(dur);
-			usb_msg_read_into(&dur, sizeof(dur));
-			Motor_PWM_Right(dur);
-			
-		} else Motor_PWM_Enable(0);
-
-            }
-            break;
+		// read left and right PWM values into volatile data 
+		usb_msg_read_into(&PWM_data.value, sizeof(PWM_data.value));
+	    }
+	    break;
         case 'P':
             if( usb_msg_length() >= MEGN540_Message_Len('P') )
             {
                 usb_msg_get();
+		// read left and right PWM values into volatile data 
+		usb_msg_read_into(&PWM_data.value, sizeof(PWM_data.value));
+		// float for calculating duration
+		float dur;
+		usb_msg_read_into(&dur, sizeof(dur));
+		if (dur <= 0) {
+		    mf_set_PWM.active = false;
+		    mf_set_PWM.duration = -1;
+		}
             }
             break;
         case 's':

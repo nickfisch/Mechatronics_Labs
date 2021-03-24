@@ -71,7 +71,15 @@ void Motor_PWM_Init( uint16_t MAX_PWM )
 	TCCR1B |= (1 << CS10);		// no prescaling
 	TCCR3A |= (1 << COM1A1) | (1 << COM1B1);	// set OC1A and OC1B as outputs from right and left motors
 
-	Set_MAX_Motor_PWM(MAX_PWM);
+	// Set MAX_PWM using code from Set_MAX_Motor_PWM
+	union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
+	data.value = MAX_PWM;
+	unsigned char sreg = SREG;
+	cli();
+	ICR1H = data.split.MSB;
+	ICR1L = data.split.LSB;
+	sei();
+	SREG = sreg;
 }
 /**
  * Function MotorPWM_Enable enables or disables the motor PWM outputs.
@@ -181,6 +189,7 @@ uint16_t Get_MAX_Motor_PWM()
 void Set_MAX_Motor_PWM( uint16_t MAX_PWM )
 {
 	union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
+	data.value = MAX_PWM;
 	unsigned char sreg = SREG;
 	cli();
 	ICR1H = data.split.MSB;
