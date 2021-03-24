@@ -195,6 +195,7 @@ void Message_Handling_Task()
                 usb_msg_get();
 		// read left and right PWM values into volatile data 
 		usb_msg_read_into(&PWM_data.value, sizeof(PWM_data.value));
+		mf_set_PWM.active = true;
 	    }
 	    break;
         case 'P':
@@ -209,6 +210,9 @@ void Message_Handling_Task()
 		if (dur <= 0) {
 		    mf_set_PWM.active = false;
 		    mf_set_PWM.duration = -1;
+		} else {
+		    mf_set_PWM.active = true;
+		    mf_set_PWM.duration = dur;
 		}
             }
             break;

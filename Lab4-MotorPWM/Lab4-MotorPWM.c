@@ -52,10 +52,10 @@ int main(void)
     // [b,a] = besself(4,6*2*pi)
     // [b,a] = tfdata(c2d(tf(b,a),1)
     // numerator = b{1}, denominator = a{1}
-    float numerator[] = {0, 1.00000000002831, -6.2016614795055e-18, 7.98934716362488e-22, -7.81462568477543e-37}; // last 'actual' value: 
+    float numerator[] = {0, 1.00000000002831, -6.2016614795055e-18, 7.98934716362488e-22, -7.81462568477543e-37};     
     float denominator[] = {1, -3.44897255468215e-11, 3.01641584463356e-22, 6.53851093191958e-37, FLT_MIN}; // last 'actual' value: 7.13251396854483e-52
 
-	float voltage_check;
+    float voltage_check;
     Filter_Init(&Battery_Filter, numerator, denominator, filter_order+1);
     first_voltage = true;
     
@@ -184,18 +184,19 @@ int main(void)
         if ( MSG_FLAG_Execute( &mf_set_PWM ) ) {
             //set variables for future calls
             mf_set_PWM.last_trigger_time = GetTime();
+	    // check that the voltage is high enough for Motors
+            if (Filter_Last_Output(&Battery_Filter) > 4.75) 
+	    {
+	           if (!Is_Motor_PWM_Enabled()) Motor_PWM_Enable(1);
+	           Motor_PWM_Left(PWM_data.split.left_PWM);	// set the left motor PWM
+	           Motor_PWM_Right(PWM_data.split.right_PWM);	// set the right motor PWM
+	    } 
+	    else Motor_PWM_Enable(0);	// if the battery voltage is below 4.75V, turn off motors
+
             if (mf_set_PWM.duration <= 0){
                 mf_set_PWM.active = false;
 		break;
             }
-	    // check that the voltage is high enough for Motors
-   	    //usb_msg_read_into(&data.value, sizeof(data.value)); 	// get first pwm value for the left motor
-
-            if (Battery_Voltage() > 4.75) {		
-	           if (!Is_Motor_PWM_Enabled()) Motor_PWM_Enable(1);
-	           Motor_PWM_Left(PWM_data.split.left_PWM);	// set the left motor PWM
-	           Motor_PWM_Right(PWM_data.split.right_PWM);	// set the right motor PWM
-	    } else Motor_PWM_Enable(0);	// if the battery voltage is below 4.75V, turn off motors
         }
         
         // checks stop PWM message flag

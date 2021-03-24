@@ -49,13 +49,6 @@
  * output pin changes.
  *
  */
-#ifndef _LAB4_MOTOR_PWM_H
-#define _LAB4_MOTOR_PWM_H
-
-#include <avr/interrupt.h> // for interrupt enable/disable
-#include <avr/io.h>        // For pin input/output access
-#include <ctype.h>         // For int32_t type
-#include <stdbool.h>       // For bool
 
 #include "MotorPWM.h"
 
@@ -197,5 +190,3 @@ void Set_MAX_Motor_PWM( uint16_t MAX_PWM )
 	sei();
 	SREG = sreg;
 }
-
-#endif
