@@ -33,7 +33,9 @@ int main(void)
         .let = {'B','A','T',' ','L','O','W'},
         .volt = 0
     };
-    
+    // power off warning
+    struct {char let[9];} Pwr_msg = {.let={'P','O','W','E','R',' ','O','F','F'}};
+
     // voltage variables
     float raw_voltage = Battery_Voltage();
     float filteredVoltage;
@@ -41,6 +43,9 @@ int main(void)
     // timer for low warning check
     Time_t BatWarnTimeCheck = GetTime();
     
+    // timer for power off
+    Time_t Pwr_check = GetTime();
+
     // timer for filter
     Time_t FilterTimer = GetTime();
  
@@ -55,7 +60,6 @@ int main(void)
     float numerator[] = {0, 1.00000000002831, -6.2016614795055e-18, 7.98934716362488e-22, -7.81462568477543e-37};     
     float denominator[] = {1, -3.44897255468215e-11, 3.01641584463356e-22, 6.53851093191958e-37, FLT_MIN}; // last 'actual' value: 7.13251396854483e-52
 
-    float voltage_check;
     Filter_Init(&Battery_Filter, numerator, denominator, filter_order+1);
     first_voltage = true;
     
@@ -173,14 +177,21 @@ int main(void)
         // Low battery check every 10 seconds
         if( SecondsSince(&BatWarnTimeCheck) >= 10){
             BatWarnTimeCheck = GetTime();
-			voltage_check = Filter_Last_Output(&Battery_Filter); 
+	    float voltage_check = Filter_Last_Output(&Battery_Filter); 
             if (voltage_check < 3.6 && voltage_check >= 2.1){
                 // send low battery warning
                 usb_send_msg("c7sf", '!', &msg, sizeof(msg));
             }
         }
-		
-		// checks set PWM message flag
+	
+	// Power off check
+	if (SecondsSince(&Pwr_check) >= 2) {
+	    Pwr_check = GetTime();
+	    float batteryV = Filter_Last_Output(&Battery_Filter);
+	    if (batteryV < 1) usb_send_msg("c9s", '!', &Pwr_msg, sizeof(Pwr_msg));
+	}
+
+	// checks set PWM message flag
         if ( MSG_FLAG_Execute( &mf_set_PWM ) ) {
             //set variables for future calls
             mf_set_PWM.last_trigger_time = GetTime();
@@ -188,14 +199,21 @@ int main(void)
             if (Filter_Last_Output(&Battery_Filter) > 4.75) 
 	    {
 	           if (!Is_Motor_PWM_Enabled()) Motor_PWM_Enable(1);
-	           Motor_PWM_Left(PWM_data.split.left_PWM);	// set the left motor PWM
+		   
+		   // set motor directions - pins PB1 and PB2 control right and left directions
+		   if (PWM_data.split.left_PWM > 0) PORTB |= (0 << PB2);
+		   else PORTB |= (1 << PB2);
+		   if(PWM_data.split.right_PWM > 0) PORTB |= (0 << PB1);
+		   else PORTB |= (1 << PB2);
+	           
+		   Motor_PWM_Left(PWM_data.split.left_PWM);	// set the left motor PWM
 	           Motor_PWM_Right(PWM_data.split.right_PWM);	// set the right motor PWM
 	    } 
 	    else Motor_PWM_Enable(0);	// if the battery voltage is below 4.75V, turn off motors
 
             if (mf_set_PWM.duration <= 0){
                 mf_set_PWM.active = false;
-		break;
+		//break;
             }
         }
         
@@ -203,7 +221,6 @@ int main(void)
         if ( MSG_FLAG_Execute( &mf_stop_PWM ) ) {
             //set variables for future calls
             mf_stop_PWM.last_trigger_time = GetTime();
-            
 
             
         }
