@@ -220,12 +220,14 @@ void Message_Handling_Task()
             if( usb_msg_length() >= MEGN540_Message_Len('s') )
             {
                 usb_msg_get();
+		mf_stop_PWM.active = false;
             }
             break;
         case 'S':
             if( usb_msg_length() >= MEGN540_Message_Len('S') )
             {
                 usb_msg_get();
+		mf_stop_PWM.active = false;
             }
             break;
         case 'q':

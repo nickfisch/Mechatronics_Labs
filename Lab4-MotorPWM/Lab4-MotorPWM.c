@@ -33,8 +33,6 @@ int main(void)
         .let = {'B','A','T',' ','L','O','W'},
         .volt = 0
     };
-    // power off warning
-    struct {char let[9];} Pwr_msg = {.let={'P','O','W','E','R',' ','O','F','F'}};
 
     // voltage variables
     float raw_voltage = Battery_Voltage();
@@ -80,6 +78,7 @@ int main(void)
             USB_SetupHardware();
             GlobalInterruptEnable();
             Message_Handling_Init(); 
+    	    Motor_PWM_Init(380);	// initiate the PWM top to 380, for a frequency of 21 kHz
         }   
         
         // checks send time message flag
@@ -185,56 +184,66 @@ int main(void)
         }
 	
 	// Power off check
-	if (SecondsSince(&Pwr_check) >= 2) {
-	    Pwr_check = GetTime();
-	    float batteryV = Filter_Last_Output(&Battery_Filter);
-	    if (batteryV < 1) usb_send_msg("c9s", '!', &Pwr_msg, sizeof(Pwr_msg));
-	}
+	//if (SecondsSince(&Pwr_check) >= 5 && mf_set_PWM.active) {
+	//    Pwr_check = GetTime();
+	//    float batteryV = Filter_Last_Output(&Battery_Filter);
+	//    if (batteryV < 1) usb_send_msg("c9s", '!', &Pwr_msg, sizeof(Pwr_msg));
+	//}
 
 	// checks set PWM message flag
-        if ( MSG_FLAG_Execute( &mf_set_PWM ) ) {
+        if ( MSG_FLAG_Execute( &mf_set_PWM )) {
             //set variables for future calls
             mf_set_PWM.last_trigger_time = GetTime();
-	    // check that the voltage is high enough for Motors
-            if (Filter_Last_Output(&Battery_Filter) > 4.75) 
+	    
+	    float batteryV = Filter_Last_Output(&Battery_Filter);
+	    if (batteryV < 1) {						// send warning if power is off 
+		    if (SecondsSince(&Pwr_check) >= 5) break;
+		    Motor_PWM_Enable(0);
+		    
+		    //power off warning
+	            struct {char let[9];} Pwr_msg = {.let={'P','O','W','E','R',' ','O','F','F'}};
+		    usb_send_msg("c9s", '!', &Pwr_msg, sizeof(Pwr_msg));
+	    }	    
+	    else if (Filter_Last_Output(&Battery_Filter) > 4.75) 	// if voltage is high enough for Motors
 	    {
-	           if (!Is_Motor_PWM_Enabled()) Motor_PWM_Enable(1);
-		   
-		   // set motor directions - pins PB1 and PB2 control right and left directions
-		   if (PWM_data.split.left_PWM > 0) PORTB |= (0 << PB2);
-		   else PORTB |= (1 << PB2);
-		   if(PWM_data.split.right_PWM > 0) PORTB |= (0 << PB1);
-		   else PORTB |= (1 << PB2);
+	           //if (!Is_Motor_PWM_Enabled()) Motor_PWM_Enable(1);
+		   Motor_PWM_Enable(1);
+
+		   // set left motor directions - pins PB1 and PB2 control right and left directions
+		   if (PWM_data.split.left_PWM > 0) PORTB |= (0 << PORTB2);
+		   else PORTB |= (1 << PORTB2);
+		   // set right motor directions
+		   if(PWM_data.split.right_PWM > 0) PORTB |= (0 << PORTB1);
+		   else PORTB |= (1 << PORTB2);
 	           
 		   Motor_PWM_Left(PWM_data.split.left_PWM);	// set the left motor PWM
 	           Motor_PWM_Right(PWM_data.split.right_PWM);	// set the right motor PWM
 	    } 
 	    else Motor_PWM_Enable(0);	// if the battery voltage is below 4.75V, turn off motors
 
-            if (mf_set_PWM.duration <= 0){
-                mf_set_PWM.active = false;
-		//break;
-            }
+            //if (mf_set_PWM.duration <= 0){
+            //    mf_set_PWM.active = false;
+            //}
         }
-        
-        // checks stop PWM message flag
-        if ( MSG_FLAG_Execute( &mf_stop_PWM ) ) {
-            //set variables for future calls
-            mf_stop_PWM.last_trigger_time = GetTime();
+	else Motor_PWM_Enable(0);	// if PWM flag not active, turn off motors
 
-            
-        }
-        
-        // checks stop PWM message flag
+        //// checks stop PWM message flag
         if ( MSG_FLAG_Execute( &mf_stop_PWM ) ) {
             //set variables for future calls
             mf_stop_PWM.last_trigger_time = GetTime();
-            if (mf_stop_PWM.duration <= 0){
-                mf_stop_PWM.active = false;
-            }
+	    mf_set_PWM.active = false;
         }
-        
-        // checks send sys message flag
+        //
+        //// checks stop PWM message flag
+        //if ( MSG_FLAG_Execute( &mf_stop_PWM ) ) {
+        //    //set variables for future calls
+        //    mf_stop_PWM.last_trigger_time = GetTime();
+        //    if (mf_stop_PWM.duration <= 0){
+        //        mf_stop_PWM.active = false;
+        //    }
+        //}
+        //
+        //// checks send sys message flag
         if ( MSG_FLAG_Execute( &mf_send_sys ) ) {
             usb_send_msg("cf4h", 'q', &sysData, sizeof(sysData));
             //set variables for future calls
