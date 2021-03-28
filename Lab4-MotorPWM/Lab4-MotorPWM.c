@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <float.h>
+#include <stdlib.h>
 
 #include "../c_lib/SerialIO.h"
 #include "../c_lib/Timing.h"
@@ -37,6 +38,7 @@ int main(void)
     // voltage variables
     float raw_voltage = Battery_Voltage();
     float filteredVoltage;
+    float batteryV;// = Filter_Last_Output(&Battery_Filter);
     
     // timer for low warning check
     Time_t BatWarnTimeCheck = GetTime();
@@ -47,6 +49,9 @@ int main(void)
     // timer for filter
     Time_t FilterTimer = GetTime();
  
+    // timer for PWM
+    Time_t PWM_timer = GetTime();
+
     // initiate battery filter
     Filter_Data_t Battery_Filter;
     bool first_voltage;
@@ -183,41 +188,40 @@ int main(void)
             }
         }
 	
-	// Power off check
-	//if (SecondsSince(&Pwr_check) >= 5 && mf_set_PWM.active) {
-	//    Pwr_check = GetTime();
-	//    float batteryV = Filter_Last_Output(&Battery_Filter);
-	//    if (batteryV < 1) usb_send_msg("c9s", '!', &Pwr_msg, sizeof(Pwr_msg));
-	//}
-
 	// checks set PWM message flag
-        if ( MSG_FLAG_Execute( &mf_set_PWM )) {
+        if ( MSG_FLAG_Execute( &mf_set_PWM)) {
             //set variables for future calls
             mf_set_PWM.last_trigger_time = GetTime();
-	    
-	    float batteryV = Filter_Last_Output(&Battery_Filter);
-	    if (batteryV < 1) {						// send warning if power is off 
-		    if (SecondsSince(&Pwr_check) >= 5) break;
+	    // check for time limit (PWM_data.time_limit true if 'P' was called 
+	    if( PWM_data.time_limit ) {
+		    // TODO check that if the time limit has been reached 
+		    // if yes, mf_set_PWM.active = false; mf_set_PWM.duration = -1;
+		    // else, break;
+	    }
+
+	    if (batteryV < 1) {				// every 5 seconds send power warning and disable motor
 		    Motor_PWM_Enable(0);
-		    
-		    //power off warning
-	            struct {char let[9];} Pwr_msg = {.let={'P','O','W','E','R',' ','O','F','F'}};
-		    usb_send_msg("c9s", '!', &Pwr_msg, sizeof(Pwr_msg));
+		    if (SecondsSince(&Pwr_check) > 5) { 
+		    	
+		    	//power off warning
+	            	struct {char let[9];} Pwr_msg = {.let={'P','O','W','E','R',' ','O','F','F'}};
+		    	usb_send_msg("c9s", '!', &Pwr_msg, sizeof(Pwr_msg));
+		    }
 	    }	    
-	    else if (Filter_Last_Output(&Battery_Filter) > 4.75) 	// if voltage is high enough for Motors
+	    else if (batteryV > 4.75) 	// if voltage is high enough for Motors
 	    {
 	           //if (!Is_Motor_PWM_Enabled()) Motor_PWM_Enable(1);
 		   Motor_PWM_Enable(1);
 
-		   // set left motor directions - pins PB1 and PB2 control right and left directions
-		   if (PWM_data.split.left_PWM > 0) PORTB |= (0 << PORTB2);
+		   // set left motor directions - pins PB1 and PB2 control right and left directions - fwd = 0; bwd = 1
+		   if (PWM_data.left_PWM > 0) PORTB |= (0 << PORTB2);
 		   else PORTB |= (1 << PORTB2);
 		   // set right motor directions
-		   if(PWM_data.split.right_PWM > 0) PORTB |= (0 << PORTB1);
+		   if(PWM_data.right_PWM > 0) PORTB |= (0 << PORTB1);
 		   else PORTB |= (1 << PORTB2);
 	           
-		   Motor_PWM_Left(PWM_data.split.left_PWM);	// set the left motor PWM
-	           Motor_PWM_Right(PWM_data.split.right_PWM);	// set the right motor PWM
+		   Motor_PWM_Left(abs(PWM_data.left_PWM));	// set the left motor PWM
+	           Motor_PWM_Right(abs(PWM_data.right_PWM));	// set the right motor PWM
 	    } 
 	    else Motor_PWM_Enable(0);	// if the battery voltage is below 4.75V, turn off motors
 

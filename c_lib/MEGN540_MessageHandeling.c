@@ -30,7 +30,7 @@
 
 #include "MEGN540_MessageHandeling.h"
 #include "../c_lib/SerialIO.h"
-#include "../c_lib/MotorPWM.h"
+#include "MotorPWM.h"
 
 
 static inline void MSG_FLAG_Init(MSG_FLAG_t* p_flag)
@@ -110,7 +110,7 @@ void Message_Handling_Task()
     char command = usb_msg_peek();
     
     // check if mesasage is fully in buffer
-    if (usb_msg_length() < MEGN540_Message_Len(command))
+    if (usb_msg_length() <= MEGN540_Message_Len(command))
         return;
         
     // send for testing as an echo function
@@ -192,10 +192,16 @@ void Message_Handling_Task()
         case 'p':
             if( usb_msg_length() >= MEGN540_Message_Len('p') )
             {
+		//struct {char let[6];} msg = {.let={'C','A','S','E',' ','p'}};
+		//usb_send_msg("c6s", '!', &msg, sizeof(msg));
+
                 usb_msg_get();
-		// read left and right PWM values into volatile data 
-		usb_msg_read_into(&PWM_data.value, sizeof(PWM_data.value));
-		mf_set_PWM.active = true;
+		// read left and right PWM values into PWM_data 
+		usb_msg_read_into(&PWM_data.left_PWM, sizeof(PWM_data.left_PWM));
+		usb_msg_read_into(&PWM_data.right_PWM, sizeof(PWM_data.right_PWM));
+		PWM_data.time_limit = false;
+
+		mf_set_PWM.active = true;	
 	    }
 	    break;
         case 'P':
@@ -203,16 +209,17 @@ void Message_Handling_Task()
             {
                 usb_msg_get();
 		// read left and right PWM values into volatile data 
-		usb_msg_read_into(&PWM_data.value, sizeof(PWM_data.value));
-		// float for calculating duration
-		float dur;
-		usb_msg_read_into(&dur, sizeof(dur));
-		if (dur <= 0) {
+		usb_msg_read_into(&PWM_data.left_PWM, sizeof(PWM_data.left_PWM));
+		usb_msg_read_into(&PWM_data.right_PWM, sizeof(PWM_data.right_PWM));
+		usb_msg_read_into(&PWM_data.duration, sizeof(PWM_data.duration));
+		PWM_data.time_limit = true;
+
+		if(PWM_data.duration <= 0) {
 		    mf_set_PWM.active = false;
 		    mf_set_PWM.duration = -1;
 		} else {
 		    mf_set_PWM.active = true;
-		    mf_set_PWM.duration = dur;
+		    mf_set_PWM.duration = PWM_data.duration;
 		}
             }
             break;
@@ -220,14 +227,14 @@ void Message_Handling_Task()
             if( usb_msg_length() >= MEGN540_Message_Len('s') )
             {
                 usb_msg_get();
-		mf_stop_PWM.active = false;
+		mf_stop_PWM.active = true;
             }
             break;
         case 'S':
             if( usb_msg_length() >= MEGN540_Message_Len('S') )
             {
                 usb_msg_get();
-		mf_stop_PWM.active = false;
+		mf_stop_PWM.active = true;
             }
             break;
         case 'q':

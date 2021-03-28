@@ -53,6 +53,18 @@
 #include "MotorPWM.h"
 #include "SerialIO.h"
 
+
+/**
+ * Function data_init() initializes left_PWM, right_PWM, and duration in the PWM_data struct to 0s
+ */
+void data_init()
+{
+	PWM_data.left_PWM = 0;
+	PWM_data.right_PWM = 0;
+	PWM_data.duration = 0;
+	PWM_data.time_limit = true;
+}
+
 /**
  * Function MotorPWM_Init initializes the motor PWM on Timer 1 for PWM based voltage control of the motors.
  * The Motor PWM system shall initialize in the disabled state for safety reasons. You should specifically enable
@@ -66,13 +78,11 @@ void Motor_PWM_Init( uint16_t MAX_PWM )
 	TCNT1 = 0;
 	sei();
 	SREG = sreg;
-	//TIMSK1 |= (1 << ICIE1); //| (1  << OCIE1A) | (1 << OCIE1B);
-	//PRR0 |= (0 << PRTIM1);		// turn off power reduction on timer1
-	//TCCR4A |= (1 << PWM4A) | (1 << PWM4B);
-	//TCCR4D |= (1 << WGM40);
-	TCCR1B |= (1 << WGM13) | (1 << CS10);		// phase correct mode and no prescaling
-	TCCR1A |= (1 << COM1A1) | (1 << COM1B1) | (1 << WGM11);	// set OC1A and OC1B as outputs from right and left motors
 
+	TCCR1B |= (1 << WGM13) | (1 << CS10);		// phase correct mode and no prescaling
+	TCCR1A |= (1 << COM1A1) | (1 << COM1B1) | (1 << WGM11);	// set OC1A/OC1B as outputs from right and left motors
+
+	data_init();
 	Motor_PWM_Enable(0);
 	Set_MAX_Motor_PWM( MAX_PWM );
 	Motor_PWM_Left(0);
@@ -95,9 +105,6 @@ bool Is_Motor_PWM_Enabled()
 {
 	if ( bit_is_set(DDRB, DDB5) && bit_is_set(DDRB, DDB6)) return true;
 	else return false;
-	
-	struct {char let[14];} msg = {.let={'I','S',' ','P','W','M',' ','E','N','A','B','L','E','D'}};
-	usb_send_msg("c9s", '!', &msg, sizeof(msg));
 }
 /*
  * Function Motor_PWM_Left sets the PWM duty cycle for the left motor.
@@ -105,18 +112,11 @@ bool Is_Motor_PWM_Enabled()
  */
 void Motor_PWM_Left( int16_t pwm )
 {
- 	union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
-	data.value = pwm;
 	unsigned char sreg = SREG;
 	cli();
-	//OCR1B = pwm;
-	OCR1BH = data.split.MSB;
-	OCR1BL = data.split.LSB;
+	OCR1B = pwm;
 	sei();
 	SREG = sreg;
-
-	struct {char let[8];} msg = {.let={'P','W','M',' ','L','E','F','T'}};
-	usb_send_msg("c8s", '!', &msg, sizeof(msg));
 }
 
 /**
@@ -125,18 +125,11 @@ void Motor_PWM_Left( int16_t pwm )
  */
 void Motor_PWM_Right( int16_t pwm )
 {
- 	//union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
-	//data.value = pwm;
 	unsigned char sreg = SREG;
 	cli();
 	OCR1A = pwm;
-	//OCR1AH = data.split.MSB;
-	//OCR1AL = data.split.LSB;
 	sei();
 	SREG = sreg;
-
-	struct {char let[9];} msg = {.let={'P','W','M',' ','R','I','G','H','T'}};
-	usb_send_msg("c9s", '!', &msg, sizeof(msg));
 }
 
 /**
@@ -146,13 +139,10 @@ void Motor_PWM_Right( int16_t pwm )
  */
 int16_t Get_Motor_PWM_Left()
 {
-	//union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
 	unsigned char sreg = SREG;
 	int16_t val;
 	cli();
 	val = OCR1B;
-	//data.split.LSB = OCR1B;
-	//data.split.MSB = OCR1B;
 	sei();
 	SREG = sreg;
 	return val;
@@ -165,14 +155,13 @@ int16_t Get_Motor_PWM_Left()
  */
 int16_t Get_Motor_PWM_Right()
 {
-	union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
 	unsigned char sreg = SREG;
+	int16_t val;
 	cli();
-	data.split.LSB = OCR1A;
-	data.split.MSB = OCR1A;
+	val = OCR1A;
 	sei();
 	SREG = sreg;
-	return data.value;
+	return val;
 }
 
 /**
@@ -181,14 +170,13 @@ int16_t Get_Motor_PWM_Right()
  */
 uint16_t Get_MAX_Motor_PWM()
 {
-	union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
 	unsigned char sreg = SREG;
+	int16_t val;
 	cli();
-	data.split.LSB = ICR1L;
-	data.split.MSB = ICR1H;
+	val = ICR1;
 	sei();
 	SREG = sreg;
-	return data.value;
+	return val;
 }
 
 /**
@@ -198,16 +186,9 @@ uint16_t Get_MAX_Motor_PWM()
  */
 void Set_MAX_Motor_PWM( uint16_t MAX_PWM )
 {
-	//union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
-	//data.value = MAX_PWM;
 	unsigned char sreg = SREG;
 	cli();
 	ICR1 = MAX_PWM;
-	//ICR1H = data.split.MSB;
-	//ICR1L = data.split.LSB;
 	sei();
 	SREG = sreg;
-
-	struct {char let[9];} msg = {.let={'P','W','M',' ','S','E','T','M','X'}};
-	usb_send_msg("c9s", '!', &msg, sizeof(msg));
 }
