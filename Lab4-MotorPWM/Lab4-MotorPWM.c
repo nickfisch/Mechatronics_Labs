@@ -22,7 +22,7 @@ int main(void)
     USB_SetupHardware();
     GlobalInterruptEnable();
     Message_Handling_Init(); // initialize message handling
-    Motor_PWM_Init(380);	// initiate the PWM top to 380, for a frequency of 21 kHz
+    Motor_PWM_Init(250);	// initiate the PWM top to 380, for a frequency of 21 kHz
 
     // variable needed for timing the while loop
     Time_t startTime;
@@ -35,10 +35,15 @@ int main(void)
         .volt = 0
     };
 
+    // Power off message
+    struct {char let[9];} Pwr_msg = {.let={'P','O','W','E','R',' ','O','F','F'}};
+
+    // case P message
+    struct {char let[6];} case_p_msg = {.let={'C','A','S','E',' ','P'}};
+
     // voltage variables
     float raw_voltage = Battery_Voltage();
     float filteredVoltage;
-    float batteryV;// = Filter_Last_Output(&Battery_Filter);
     
     // timer for low warning check
     Time_t BatWarnTimeCheck = GetTime();
@@ -46,12 +51,13 @@ int main(void)
     // timer for power off
     Time_t Pwr_check = GetTime();
 
+    // timer for PWM
+    Time_t PWM_timer = GetTime();
+    bool PWM_timer_active = false;
+
     // timer for filter
     Time_t FilterTimer = GetTime();
  
-    // timer for PWM
-    Time_t PWM_timer = GetTime();
-
     // initiate battery filter
     Filter_Data_t Battery_Filter;
     bool first_voltage;
@@ -83,7 +89,7 @@ int main(void)
             USB_SetupHardware();
             GlobalInterruptEnable();
             Message_Handling_Init(); 
-    	    Motor_PWM_Init(380);	// initiate the PWM top to 380, for a frequency of 21 kHz
+    	    Motor_PWM_Init(250);	// initiate the PWM top to 380, for a frequency of 21 kHz
         }   
         
         // checks send time message flag
@@ -187,55 +193,63 @@ int main(void)
                 usb_send_msg("c7sf", '!', &msg, sizeof(msg));
             }
         }
-	
+
 	// checks set PWM message flag
         if ( MSG_FLAG_Execute( &mf_set_PWM)) {
             //set variables for future calls
             mf_set_PWM.last_trigger_time = GetTime();
-	    // check for time limit (PWM_data.time_limit true if 'P' was called 
-	    if( PWM_data.time_limit ) {
-		    // TODO check that if the time limit has been reached 
-		    // if yes, mf_set_PWM.active = false; mf_set_PWM.duration = -1;
-		    // else, break;
-	    }
-
-	    if (batteryV < 1) {				// every 5 seconds send power warning and disable motor
-		    Motor_PWM_Enable(0);
-		    if (SecondsSince(&Pwr_check) > 5) { 
-		    	
-		    	//power off warning
-	            	struct {char let[9];} Pwr_msg = {.let={'P','O','W','E','R',' ','O','F','F'}};
-		    	usb_send_msg("c9s", '!', &Pwr_msg, sizeof(Pwr_msg));
-		    }
+	    
+	    // check for time limit (PWM_data.time_limit true if 'P' was called)
+	    if (Filter_Last_Output(&Battery_Filter) < 1) {		// every 5 seconds send power warning and disable motor
+	    	Motor_PWM_Enable(0);
+	    	if (SecondsSince(&Pwr_check) > 5) { 		// power off warning
+	    		Pwr_check = GetTime();
+	    		usb_send_msg("c9s", '!', &Pwr_msg, sizeof(Pwr_msg));
+	    	}
 	    }	    
-	    else if (batteryV > 4.75) 	// if voltage is high enough for Motors
+	    else if (Filter_Last_Output(&Battery_Filter) > 4.75) 		// if voltage is high enough for Motors
 	    {
-	           //if (!Is_Motor_PWM_Enabled()) Motor_PWM_Enable(1);
-		   Motor_PWM_Enable(1);
+	    	Motor_PWM_Enable(1);
 
-		   // set left motor directions - pins PB1 and PB2 control right and left directions - fwd = 0; bwd = 1
-		   if (PWM_data.left_PWM > 0) PORTB |= (0 << PORTB2);
-		   else PORTB |= (1 << PORTB2);
-		   // set right motor directions
-		   if(PWM_data.right_PWM > 0) PORTB |= (0 << PORTB1);
-		   else PORTB |= (1 << PORTB2);
-	           
-		   Motor_PWM_Left(abs(PWM_data.left_PWM));	// set the left motor PWM
-	           Motor_PWM_Right(abs(PWM_data.right_PWM));	// set the right motor PWM
-	    } 
-	    else Motor_PWM_Enable(0);	// if the battery voltage is below 4.75V, turn off motors
+	    	// set left motor directions - pins pb1 and pb2 control right and left directions - fwd = 0; bwd = 1
+	    	if (PWM_data.left_PWM > 0) PORTB &= ~(1 << PORTB2);
+	    	else if (PWM_data.left_PWM < 0) PORTB |= (1 << PORTB2);
 
-            //if (mf_set_PWM.duration <= 0){
-            //    mf_set_PWM.active = false;
-            //}
+	    	if (PWM_data.right_PWM > 0) PORTB &= ~(1 << PORTB1); 	// set right motor directions
+	    	else if (PWM_data.right_PWM < 0) PORTB |= (1 << PORTB1);
+	    	
+	    	Motor_PWM_Left(abs(PWM_data.left_PWM));			// set the left motor pwm
+	    	Motor_PWM_Right(abs(PWM_data.right_PWM));		// set the right motor PWM
+
+		if( PWM_data.time_limit ) {
+		    PWM_timer = GetTime();
+		    usb_send_msg("c6s", '!', &case_p_msg, sizeof(msg));
+		    PWM_data.time_limit = false;
+		    PWM_timer_active = true;
+		} else PWM_timer_active = false;
+
+		mf_set_PWM.active = false;
+		PWM_data_init();
+	    }
+	    else Motor_PWM_Enable(0);
         }
-	else Motor_PWM_Enable(0);	// if PWM flag not active, turn off motors
+	
+	if ( PWM_timer_active && (SecondsSince(&PWM_timer) >= mf_set_PWM.duration)) {
+	    	Motor_PWM_Left(0);			// set the left motor pwm
+	    	Motor_PWM_Right(0);			// set the right motor PWM
+		PWM_timer_active = false;
+	}
 
-        //// checks stop PWM message flag
+
+        // checks stop PWM message flag
         if ( MSG_FLAG_Execute( &mf_stop_PWM ) ) {
             //set variables for future calls
             mf_stop_PWM.last_trigger_time = GetTime();
 	    mf_set_PWM.active = false;
+	    Motor_PWM_Left(0);
+	    Motor_PWM_Right(0);
+	    Motor_PWM_Enable(0);
+	    mf_stop_PWM.active = false;
         }
         //
         //// checks stop PWM message flag

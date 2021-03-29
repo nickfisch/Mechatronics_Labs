@@ -57,12 +57,12 @@
 /**
  * Function data_init() initializes left_PWM, right_PWM, and duration in the PWM_data struct to 0s
  */
-void data_init()
+
+void PWM_data_init()
 {
 	PWM_data.left_PWM = 0;
 	PWM_data.right_PWM = 0;
 	PWM_data.duration = 0;
-	PWM_data.time_limit = true;
 }
 
 /**
@@ -82,12 +82,13 @@ void Motor_PWM_Init( uint16_t MAX_PWM )
 	TCCR1B |= (1 << WGM13) | (1 << CS10);		// phase correct mode and no prescaling
 	TCCR1A |= (1 << COM1A1) | (1 << COM1B1) | (1 << WGM11);	// set OC1A/OC1B as outputs from right and left motors
 
-	data_init();
+	PWM_data_init();
 	Motor_PWM_Enable(0);
 	Set_MAX_Motor_PWM( MAX_PWM );
 	Motor_PWM_Left(0);
 	Motor_PWM_Right(0);
 }
+
 /**
  * Function MotorPWM_Enable enables or disables the motor PWM outputs.
  * @param [bool] enable (true set enable, false set disable)
@@ -97,6 +98,7 @@ void Motor_PWM_Enable( bool enable )
 	if (enable) DDRB |= (1 << DDB5) | (1 << DDB6);
 	else DDRB |= (0 << DDB5) | (0 << DDB6);
 }
+
 /**
  * Function Is_Motor_PWM_Enabled returns if the motor PWM is enabled for output.
  * @param [bool] true if enabled, false if disabled
@@ -106,6 +108,7 @@ bool Is_Motor_PWM_Enabled()
 	if ( bit_is_set(DDRB, DDB5) && bit_is_set(DDRB, DDB6)) return true;
 	else return false;
 }
+
 /*
  * Function Motor_PWM_Left sets the PWM duty cycle for the left motor.
  * @return [int32_t] The count number.

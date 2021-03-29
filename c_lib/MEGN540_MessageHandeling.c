@@ -192,10 +192,8 @@ void Message_Handling_Task()
         case 'p':
             if( usb_msg_length() >= MEGN540_Message_Len('p') )
             {
-		//struct {char let[6];} msg = {.let={'C','A','S','E',' ','p'}};
-		//usb_send_msg("c6s", '!', &msg, sizeof(msg));
-
                 usb_msg_get();
+
 		// read left and right PWM values into PWM_data 
 		usb_msg_read_into(&PWM_data.left_PWM, sizeof(PWM_data.left_PWM));
 		usb_msg_read_into(&PWM_data.right_PWM, sizeof(PWM_data.right_PWM));
@@ -219,7 +217,7 @@ void Message_Handling_Task()
 		    mf_set_PWM.duration = -1;
 		} else {
 		    mf_set_PWM.active = true;
-		    mf_set_PWM.duration = PWM_data.duration;
+		    mf_set_PWM.duration = PWM_data.duration/1000;
 		}
             }
             break;

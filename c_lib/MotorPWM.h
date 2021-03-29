@@ -57,14 +57,15 @@
 #include <ctype.h>         // For int32_t type
 #include <stdbool.h>       // For bool
 
-extern struct PWM_info { int16_t left_PWM; int16_t right_PWM; float duration; bool time_limit;} PWM_data; 
+extern struct PWM_info { int16_t left_PWM; int16_t right_PWM; float duration; bool time_limit;} PWM_data; // duration in ms 
 
 struct PWM_info PWM_data;
 
 /**
  * Function data_init() initializes left_PWM, right_PWM, and duration in the PWM_data struct to 0s
  */
-void data_init();
+
+void PWM_data_init();
 
 /**
  * Function MotorPWM_Init initializes the motor PWM on Timer 1 for PWM based voltage control of the motors.
