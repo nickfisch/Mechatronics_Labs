@@ -102,7 +102,7 @@ void Message_Handling_Task()
     // If it just is a USB thing, do it here, if it requires other hardware, do it in the main and
     // set a flag to have it done here.
 
-    // Check to see if their is data in waiting
+    // Check to see if there is data in waiting
     if( !usb_msg_length() )
         return; // nothing to process...
 
@@ -110,7 +110,7 @@ void Message_Handling_Task()
     char command = usb_msg_peek();
     
     // check if mesasage is fully in buffer
-    if (usb_msg_length() <= MEGN540_Message_Len(command))
+    if (usb_msg_length() < MEGN540_Message_Len(command))
         return;
         
     // send for testing as an echo function
@@ -212,13 +212,13 @@ void Message_Handling_Task()
 		usb_msg_read_into(&PWM_data.duration, sizeof(PWM_data.duration));
 		PWM_data.time_limit = true;
 
-		if(PWM_data.duration <= 0) {
-		    mf_set_PWM.active = false;
-		    mf_set_PWM.duration = -1;
-		} else {
+		//if(PWM_data.duration <= 0) {
+		//    mf_set_PWM.active = false;
+		//    mf_set_PWM.duration = -1;
+		//} else {
 		    mf_set_PWM.active = true;
 		    mf_set_PWM.duration = PWM_data.duration/1000;
-		}
+		//}
             }
             break;
         case 's':
