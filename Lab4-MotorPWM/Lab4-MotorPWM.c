@@ -8,27 +8,34 @@
 #include "../c_lib/Battery_Monitor.h"
 #include "../c_lib/Filter.h"
 #include "../c_lib/MEGN540_MessageHandeling.h"
-#include "../c_lib/Filter.h"
 #include "../c_lib/MotorPWM.h"
 
-    // timer for power off
-    Time_t Pwr_check;
+// timer for power off
+Time_t Pwr_check;
 
-    // timer for PWM
-    Time_t PWM_timer;
-    bool PWM_timer_active;
+// timer for PWM
+Time_t PWM_timer;
+bool PWM_timer_active;
 
-    // initiate battery filter
-    Filter_Data_t Battery_Filter;
-    bool first_voltage;
-    int filter_order = 4;
-    //int filter_order = 3;
-    /* MatLab code */
-    // [b,a] = besself(4,6*2*pi)
-    // [b,a] = tfdata(c2d(tf(b,a),1)
-    // numerator = b{1}, denominator = a{1}
-    float numerator[] = {0, 1.00000000002831, -6.2016614795055e-18, 7.98934716362488e-22, -7.81462568477543e-37};     
-    float denominator[] = {1, -3.44897255468215e-11, 3.01641584463356e-22, 6.53851093191958e-37, FLT_MIN}; // last 'actual' value: 7.13251396854483e-52
+// initiate battery filter
+Filter_Data_t Battery_Filter;
+bool first_voltage;
+int filter_order = 4;
+//int filter_order = 3;
+/* MatLab code */
+// [b,a] = besself(4,6*2*pi)
+// [b,a] = tfdata(c2d(tf(b,a),1)
+// numerator = b{1}, denominator = a{1}
+float numerator[] = {0, 1.00000000002831, -6.2016614795055e-18, 7.98934716362488e-22, -7.81462568477543e-37};     
+float denominator[] = {1, -3.44897255468215e-11, 3.01641584463356e-22, 6.53851093191958e-37, FLT_MIN}; // last 'actual' value: 7.13251396854483e-52
+
+// system data that is sent with q or Q command
+struct __attribute__((__packed__)) { float time; int16_t PWM_L; int16_t PWM_R; int16_t Encoder_L; int16_t Encoder_R;} sysData;
+// info used to send sysData  -  t_interval in milliseconds
+struct __attribute__((__packed__)) { float t_interval; Time_t start_time; Time_t last_send_time; bool active; } sys_send_info;
+
+
+void Set_Send_sysData();
 
 void Set_Motor_Directions(int16_t left, int16_t right);
 
@@ -81,9 +88,6 @@ int main(void)
  
     Filter_Init(&Battery_Filter, numerator, denominator, filter_order+1);
     first_voltage = true;
-    
-    // System data variable
-    struct __attribute__((__packed__)) { float time; int16_t PWM_L; int16_t PWM_R; int16_t Encoder_L; int16_t Encoder_R;} sysData;
 
     while( true ) {
         USB_Upkeep_Task();
@@ -172,7 +176,6 @@ int main(void)
         
         // updates the battery voltage every 2 ms
         if( SecondsSince(&FilterTimer) >= 0.002) {
-        //if( SecondsSince(&FilterTimer) >= 0.008) {
             FilterTimer = GetTime();
             raw_voltage = Battery_Voltage();
             if (first_voltage) {
@@ -205,9 +208,9 @@ int main(void)
             }
         }
 
-	Message_Handling_Task();
+	    Message_Handling_Task();
 
-	// checks set PWM message flag
+	    // checks set PWM message flag
         if ( MSG_FLAG_Execute( &mf_set_PWM)) {
             //set variables for future calls
             mf_set_PWM.last_trigger_time = GetTime();
@@ -225,44 +228,68 @@ int main(void)
 	    {
 	    	Motor_PWM_Enable(1);
 
-		Set_Motor_Directions(PWM_data.left_PWM, PWM_data.right_PWM);
+		    Set_Motor_Directions(PWM_data.left_PWM, PWM_data.right_PWM);
 	    	
 	    	Motor_PWM_Left(abs(PWM_data.left_PWM));		// set the left motor pwm
 	    	Motor_PWM_Right(abs(PWM_data.right_PWM));	// set the right motor PWM
 
-		Start_PWM_Timer(PWM_data.time_limit);		// start timer if needed
+		    Start_PWM_Timer(PWM_data.time_limit);		// start timer if needed (P call)
 
-		mf_set_PWM.active = false;
-		PWM_data_init();
+		    mf_set_PWM.active = false;
+		    PWM_data_init();
 	    }
 	    else Motor_PWM_Enable(0);
         }
 
-	Check_PWM_Timer_and_PWR();
+	    Check_PWM_Timer_and_PWR();
 
         // checks stop PWM message flag
         if ( MSG_FLAG_Execute( &mf_stop_PWM ) ) {
             //set variables for future calls
             mf_stop_PWM.last_trigger_time = GetTime();
-	    mf_set_PWM.active = false;
-	    Motor_PWM_Left(0);
-	    Motor_PWM_Right(0);
-	    Motor_PWM_Enable(0);
-	    mf_stop_PWM.active = false;
+	        mf_set_PWM.active = false;
+	        Motor_PWM_Left(0);
+	        Motor_PWM_Right(0);
+	        Motor_PWM_Enable(0);
+	        mf_stop_PWM.active = false;
         }
         
         // checks send sys message flag
         if ( MSG_FLAG_Execute( &mf_send_sys ) ) {
-            usb_send_msg("cf4h", 'q', &sysData, sizeof(sysData));
+            sys_send_info.start_time = GetTime();
+            sys_send_info.last_send_time = sys_send_info.start_time;;
             //set variables for future calls
-            mf_send_sys.last_trigger_time = GetTime();
-            if (mf_send_sys.duration <= 0){
-                mf_send_sys.active = false;
+            if (mf_send_sys.duration > 0){
+                sys_send_info.active = true;
+                sys_send_info.t_interval = mf_send_sys.duration;
+            } 
+            else {
+                sys_send_info.active = false;
+                break;
             }
+            Set_Send_sysData();
+            mf_send_sys.duration = -1;             // reset mf flag
+            mf_send_sys.active = false;
         }
+
+        // checks if sys_send_info is active
+        if (sys_send_info.active && (SecondsSince(&sys_send_info.last_send_time) >= (sys_send_info.t_interval/1000))) {
+            sys_send_info.last_send_time = GetTime();
+            Set_Send_sysData();
+        }
+
    }
 }
 
+void Set_Send_sysData()
+{
+    sysData.time = SecondsSince(&sys_send_info.start_time);
+    sysData.PWM_L = Get_Motor_PWM_Left();
+    sysData.PWM_R = Get_Motor_PWM_Right();
+    sysData.Encoder_L = Counts_Left();
+    sysData.Encoder_R = Counts_Right();
+    usb_send_msg("cf4h", 'q', &sysData, sizeof(sysData));
+}
 /**
  * Set_Motor_direction() takes a float value for each motor and depending on their sign (+/-) sets the 
  * motor directions
@@ -295,7 +322,7 @@ void Start_PWM_Timer(bool timer)
 void Check_PWM_Timer_and_PWR()
 {
 	// if the motor is turned off while running
-	if (((Get_Motor_PWM_Left() > 0) || (Get_Motor_PWM_Right() > 0)) && Filter_Last_Output(&Battery_Filter) < 1) {
+	if (((Get_Motor_PWM_Left() > 0) || (Get_Motor_PWM_Right() > 0)) && Filter_Last_Output(&Battery_Filter) < 4.75) {
 		Motor_PWM_Enable(0);
 		Motor_PWM_Left(0);
 		Motor_PWM_Right(0);
@@ -304,8 +331,8 @@ void Check_PWM_Timer_and_PWR()
 
 	// for the PWM_timer 
 	if ( PWM_timer_active && (SecondsSince(&PWM_timer) >= mf_set_PWM.duration)) {
-	    	Motor_PWM_Left(0);			// set the left motor pwm
-	    	Motor_PWM_Right(0);			// set the right motor PWM
-		PWM_timer_active = false;
+	    Motor_PWM_Left(0);			// set the left motor pwm
+	    Motor_PWM_Right(0);			// set the right motor PWM
+	    PWM_timer_active = false;
 	}
 }

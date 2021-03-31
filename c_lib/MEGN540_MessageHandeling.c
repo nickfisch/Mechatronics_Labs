@@ -31,7 +31,7 @@
 #include "MEGN540_MessageHandeling.h"
 #include "../c_lib/SerialIO.h"
 #include "MotorPWM.h"
-
+#include "Timing.h"
 
 static inline void MSG_FLAG_Init(MSG_FLAG_t* p_flag)
 {
@@ -206,26 +206,21 @@ void Message_Handling_Task()
             if( usb_msg_length() >= MEGN540_Message_Len('P') )
             {
                 usb_msg_get();
-		// read left and right PWM values into volatile data 
-		usb_msg_read_into(&PWM_data.left_PWM, sizeof(PWM_data.left_PWM));
-		usb_msg_read_into(&PWM_data.right_PWM, sizeof(PWM_data.right_PWM));
-		usb_msg_read_into(&PWM_data.duration, sizeof(PWM_data.duration));
-		PWM_data.time_limit = true;
+		        // read left and right PWM values into volatile data 
+		        usb_msg_read_into(&PWM_data.left_PWM, sizeof(PWM_data.left_PWM));
+		        usb_msg_read_into(&PWM_data.right_PWM, sizeof(PWM_data.right_PWM));
+		        usb_msg_read_into(&PWM_data.duration, sizeof(PWM_data.duration));
+		        PWM_data.time_limit = true;
 
-		//if(PWM_data.duration <= 0) {
-		//    mf_set_PWM.active = false;
-		//    mf_set_PWM.duration = -1;
-		//} else {
-		    mf_set_PWM.active = true;
-		    mf_set_PWM.duration = PWM_data.duration/1000;
-		//}
+		        mf_set_PWM.active = true;
+		        mf_set_PWM.duration = PWM_data.duration/1000;    // in seconds
             }
             break;
         case 's':
             if( usb_msg_length() >= MEGN540_Message_Len('s') )
             {
                 usb_msg_get();
-		mf_stop_PWM.active = true;
+		        mf_stop_PWM.active = true;
             }
             break;
         case 'S':
@@ -239,12 +234,24 @@ void Message_Handling_Task()
             if( usb_msg_length() >= MEGN540_Message_Len('q') )
             {
                 usb_msg_get();
+		        mf_send_sys.active = true;
+		        mf_send_sys.duration = -1;
             }
             break;
         case 'Q':
             if( usb_msg_length() >= MEGN540_Message_Len('Q') )
             {
                 usb_msg_get();
+   		        mf_send_sys.active = true;
+		        // float for calculating duration
+   		        float dur;
+   		        usb_msg_read_into(&dur, sizeof(dur));
+   		        // switch to see witch type of call it is
+   		        if (dur <= 0) {
+   		            mf_send_sys.duration = -1;
+   		            return;
+   		        }
+   		        mf_send_sys.duration = dur;
             }
             break;
         default:
