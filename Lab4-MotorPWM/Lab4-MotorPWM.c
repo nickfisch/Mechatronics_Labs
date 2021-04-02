@@ -257,24 +257,20 @@ int main(void)
         // checks send sys message flag
         if ( MSG_FLAG_Execute( &mf_send_sys ) ) {
             sys_send_info.start_time = GetTime();
-            sys_send_info.last_send_time = sys_send_info.start_time;;
             //set variables for future calls
-            if (mf_send_sys.duration > 0){
+            if (mf_send_sys.duration > 0) {
                 sys_send_info.active = true;
                 sys_send_info.t_interval = mf_send_sys.duration;
+                Set_Send_sysData();
             } 
-            else {
-                sys_send_info.active = false;
-                break;
-            }
-            Set_Send_sysData();
+            else sys_send_info.active = false;
+
             mf_send_sys.duration = -1;             // reset mf flag
             mf_send_sys.active = false;
         }
 
         // checks if sys_send_info is active
         if (sys_send_info.active && (SecondsSince(&sys_send_info.last_send_time) >= (sys_send_info.t_interval/1000))) {
-            sys_send_info.last_send_time = GetTime();
             Set_Send_sysData();
         }
 
@@ -283,6 +279,7 @@ int main(void)
 
 void Set_Send_sysData()
 {
+    sys_send_info.last_send_time = GetTime();
     sysData.time = SecondsSince(&sys_send_info.start_time);
     sysData.PWM_L = Get_Motor_PWM_Left();
     sysData.PWM_R = Get_Motor_PWM_Right();
