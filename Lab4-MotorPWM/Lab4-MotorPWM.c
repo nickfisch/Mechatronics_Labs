@@ -210,6 +210,11 @@ int main(void)
 
 	    Message_Handling_Task();
 
+        // checks if sys_send_info is active - first time
+        if (sys_send_info.active && (SecondsSince(&sys_send_info.last_send_time) >= (sys_send_info.t_interval/1000))) {
+            Set_Send_sysData();
+        }
+
 	    // checks set PWM message flag
         if ( MSG_FLAG_Execute( &mf_set_PWM)) {
             //set variables for future calls
@@ -269,7 +274,7 @@ int main(void)
             mf_send_sys.active = false;
         }
 
-        // checks if sys_send_info is active
+        // checks if sys_send_info is active - second time
         if (sys_send_info.active && (SecondsSince(&sys_send_info.last_send_time) >= (sys_send_info.t_interval/1000))) {
             Set_Send_sysData();
         }
