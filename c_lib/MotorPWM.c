@@ -148,6 +148,7 @@ int16_t Get_Motor_PWM_Left()
 	val = OCR1B;
 	sei();
 	SREG = sreg;
+    if (bit_is_set(PORTB, PORTB2)) val = -val;
 	return val;
 }
 
@@ -164,6 +165,7 @@ int16_t Get_Motor_PWM_Right()
 	val = OCR1A;
 	sei();
 	SREG = sreg;
+    if (bit_is_set(PORTB, PORTB1)) val = -val;
 	return val;
 }
 
