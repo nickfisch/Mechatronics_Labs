@@ -270,6 +270,7 @@ void Message_Handling_Task()
                 }
             }
             break;
+            case
         default:
             // What to do if you dont recognize the command character
             usb_send_msg("cc", '?', &command, sizeof(command));
