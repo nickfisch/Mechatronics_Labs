@@ -423,12 +423,13 @@ class GuiSetup:
         if not filename:
             return # none was selected
         
-        csvfile = open('/home/pi/Desktop/MEGN540/SerialMonitor/csv_tmp.csv',newline='\n')
+        csvfile = open(filename,newline='\n')
         csv_reader = csv.reader(csvfile, delimiter=',')
         
         command_list = collections.deque()
         for row in csv_reader:
-            command_list.append(row)
+            if len(row) is not 0:
+                command_list.append(row)
         
         csvfile.close()
             
