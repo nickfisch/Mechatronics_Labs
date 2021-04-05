@@ -254,7 +254,6 @@ void Message_Handling_Task()
    		        mf_send_sys.duration = dur;
             }
             break;
-            case
         default:
             // What to do if you dont recognize the command character
             usb_send_msg("cc", '?', &command, sizeof(command));

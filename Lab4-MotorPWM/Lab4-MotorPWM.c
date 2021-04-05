@@ -301,10 +301,10 @@ void Set_Send_sysData()
 void Set_Motor_Directions(int16_t left, int16_t right)
 {
 	// set left motor directions - pins pb1 and pb2 control right and left directions - fwd = 0; bwd = 1
-	if (left > 0) PORTB &= ~(1 << PORTB2);
+	if (left >= 0) PORTB &= ~(1 << PORTB2);
 	else if (left < 0) PORTB |= (1 << PORTB2);
 	
-	if (right > 0) PORTB &= ~(1 << PORTB1); 	// set right motor directions
+	if (right >= 0) PORTB &= ~(1 << PORTB1); 	// set right motor directions
 	else if (right < 0) PORTB |= (1 << PORTB1);
 }
 
