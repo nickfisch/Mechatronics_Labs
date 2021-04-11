@@ -194,14 +194,14 @@ void Message_Handling_Task()
             {
                 usb_msg_get();
 
-		// read left and right PWM values into PWM_data 
-		usb_msg_read_into(&PWM_data.left_PWM, sizeof(PWM_data.left_PWM));
-		usb_msg_read_into(&PWM_data.right_PWM, sizeof(PWM_data.right_PWM));
-		PWM_data.time_limit = false;
+		        // read left and right PWM values into PWM_data 
+		        usb_msg_read_into(&PWM_data.left_PWM, sizeof(PWM_data.left_PWM));
+		        usb_msg_read_into(&PWM_data.right_PWM, sizeof(PWM_data.right_PWM));
+		        PWM_data.time_limit = false;
 
-		mf_set_PWM.active = true;	
-	    }
-	    break;
+		        mf_set_PWM.active = true;	
+	        }
+	        break;
         case 'P':
             if( usb_msg_length() >= MEGN540_Message_Len('P') )
             {
