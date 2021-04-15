@@ -192,6 +192,7 @@ void Message_Handling_Task()
             if( usb_msg_length() >= MEGN540_Message_Len('p') )
             {
                 usb_msg_get();
+                //mf_set_PWM
             }
             break;
         case 'P':
@@ -204,18 +205,21 @@ void Message_Handling_Task()
             if( usb_msg_length() >= MEGN540_Message_Len('s') )
             {
                 usb_msg_get();
+                mf_stop_PWM.active = true;
             }
             break;
         case 'S':
             if( usb_msg_length() >= MEGN540_Message_Len('S') )
             {
                 usb_msg_get();
+                mf_stop_PWM.active = true;
             }
             break;
         case 'q':
             if( usb_msg_length() >= MEGN540_Message_Len('q') )
             {
                 usb_msg_get();
+                //mf_send_sys
             }
             break;
         case 'Q':

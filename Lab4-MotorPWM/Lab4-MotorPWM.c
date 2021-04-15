@@ -185,8 +185,6 @@ int main(void)
             if (mf_set_PWM.duration <= 0){
                 mf_set_PWM.active = false;
             }
-            
-            
         }
         
         // checks stop PWM message flag
