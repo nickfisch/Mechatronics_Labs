@@ -29,7 +29,7 @@
 */
 
 #include "MEGN540_MessageHandeling.h"
-#include "../c_lib/SerialIO.h"
+#include "SerialIO.h"
 #include "MotorPWM.h"
 #include "Timing.h"
 
