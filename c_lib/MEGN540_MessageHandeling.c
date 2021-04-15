@@ -29,8 +29,9 @@
 */
 
 #include "MEGN540_MessageHandeling.h"
-#include "../c_lib/SerialIO.h"
-
+#include "SerialIO.h"
+#include "MotorPWM.h"
+#include "Timing.h"
 
 static inline void MSG_FLAG_Init(MSG_FLAG_t* p_flag)
 {
@@ -101,7 +102,7 @@ void Message_Handling_Task()
     // If it just is a USB thing, do it here, if it requires other hardware, do it in the main and
     // set a flag to have it done here.
 
-    // Check to see if their is data in waiting
+    // Check to see if there is data in waiting
     if( !usb_msg_length() )
         return; // nothing to process...
 
@@ -192,40 +193,83 @@ void Message_Handling_Task()
             if( usb_msg_length() >= MEGN540_Message_Len('p') )
             {
                 usb_msg_get();
+<<<<<<< HEAD
                 //mf_set_PWM
             }
             break;
+=======
+
+		        // read left and right PWM values into PWM_data 
+		        usb_msg_read_into(&PWM_data.left_PWM, sizeof(PWM_data.left_PWM));
+		        usb_msg_read_into(&PWM_data.right_PWM, sizeof(PWM_data.right_PWM));
+		        PWM_data.time_limit = false;
+
+		        mf_set_PWM.active = true;	
+	        }
+	        break;
+>>>>>>> 348700fec84ccb3add43dc132e5ed15ea177fced
         case 'P':
             if( usb_msg_length() >= MEGN540_Message_Len('P') )
             {
                 usb_msg_get();
+		        // read left and right PWM values into volatile data 
+		        usb_msg_read_into(&PWM_data.left_PWM, sizeof(PWM_data.left_PWM));
+		        usb_msg_read_into(&PWM_data.right_PWM, sizeof(PWM_data.right_PWM));
+		        usb_msg_read_into(&PWM_data.duration, sizeof(PWM_data.duration));
+		        PWM_data.time_limit = true;
+
+		        mf_set_PWM.active = true;
+		        mf_set_PWM.duration = PWM_data.duration/1000;    // in seconds
             }
             break;
         case 's':
             if( usb_msg_length() >= MEGN540_Message_Len('s') )
             {
                 usb_msg_get();
+<<<<<<< HEAD
                 mf_stop_PWM.active = true;
+=======
+		        mf_stop_PWM.active = true;
+>>>>>>> 348700fec84ccb3add43dc132e5ed15ea177fced
             }
             break;
         case 'S':
             if( usb_msg_length() >= MEGN540_Message_Len('S') )
             {
                 usb_msg_get();
+<<<<<<< HEAD
                 mf_stop_PWM.active = true;
+=======
+		mf_stop_PWM.active = true;
+>>>>>>> 348700fec84ccb3add43dc132e5ed15ea177fced
             }
             break;
         case 'q':
             if( usb_msg_length() >= MEGN540_Message_Len('q') )
             {
                 usb_msg_get();
+<<<<<<< HEAD
                 //mf_send_sys
+=======
+		        mf_send_sys.active = true;
+		        mf_send_sys.duration = -1;
+>>>>>>> 348700fec84ccb3add43dc132e5ed15ea177fced
             }
             break;
         case 'Q':
             if( usb_msg_length() >= MEGN540_Message_Len('Q') )
             {
                 usb_msg_get();
+   		        mf_send_sys.active = true;
+		        // float for calculating duration
+   		        float dur;
+   		        usb_msg_read_into(&dur, sizeof(dur));
+   		        // switch to see witch type of call it is
+   		        if (dur <= 0) {
+   		            mf_send_sys.duration = -1;
+   		            return;
+   		        }
+   		        mf_send_sys.duration = dur;
             }
             break;
         default:

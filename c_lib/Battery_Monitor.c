@@ -34,12 +34,12 @@ float Battery_Voltage()
         if (ADCSRA & (1 << ADIF)) {
     		data.split.LSB = ADCL;
     		data.split.MSB = ADCH;
-        	sei();	// re-enable interrupts
-    		SREG = sreg;
         	break;
         }
     }
     voltage = data.value * BITS_TO_BATTERY_VOLTS;
+    sei();	// re-enable interrupts
+    SREG = sreg;
     return voltage;
 }
 

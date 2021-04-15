@@ -55,21 +55,6 @@ void SetupTimer0()
     // YOUR CODE HERE
     // Enable timing, setup prescalers, etc.
 
-    /*
-    // WGM02 = 2 to clear the timer on compare match 
-    //TCCR0A |= (0 << WGM00);
-    //TCCR0A |= (1 << WGM01);
-    //TCCR0B |= (0 << WGM02);	// needs to be TCCR0B->ATmega datasheet Pg 96 
-    
-    // set OC0A on compare match
-    //TCCR0A |= (1 << COM0A0);
-    //TCCR0A |= (1 << COM0A1);
-
-    // set the prescalar to 64 
-    // 011 = 3, which gives a precalar of 64
-    //TCCR0B |= (0 << CS02);
-    */
-
     TCNT0 = 0;	 // set timer value to 0
     TCCR0B |= (1 << CS00);
     TCCR0B |= (1 << CS01);

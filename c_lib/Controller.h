@@ -42,6 +42,8 @@
 
 typedef struct { Filter_Data_t controller; float kp; float target_pos; float target_vel; float update_period;} Controller_t;
 
+float last_control_val;
+
 /**
  * Function Saturate saturates a value to be within the range.
  */

@@ -49,15 +49,21 @@
  * output pin changes.
  *
  */
-#ifndef _LAB4_MOTOR_PWM_H
-#define _LAB4_MOTOR_PWM_H
-
-#include <avr/interrupt.h> // for interrupt enable/disable
-#include <avr/io.h>        // For pin input/output access
-#include <ctype.h>         // For int32_t type
-#include <stdbool.h>       // For bool
 
 #include "MotorPWM.h"
+#include "SerialIO.h"
+
+
+/**
+ * Function data_init() initializes left_PWM, right_PWM, and duration in the PWM_data struct to 0s
+ */
+
+void PWM_data_init()
+{
+	PWM_data.left_PWM = 0;
+	PWM_data.right_PWM = 0;
+	PWM_data.duration = 0;
+}
 
 /**
  * Function MotorPWM_Init initializes the motor PWM on Timer 1 for PWM based voltage control of the motors.
@@ -67,10 +73,22 @@
  */
 void Motor_PWM_Init( uint16_t MAX_PWM )
 {
-	TCCR3B |= (1 << WGM13);		// frequecy correct mode
-	TCCR1B |= (1 << CS10);		// no prescaling
-	TCCR3A |= (1 << COM1A1) | (1 << COM1B1);	// set OC1A and OC1B as outputs from right and left motors
+	char sreg = SREG;
+	cli();
+	TCNT1 = 0;
+	sei();
+	SREG = sreg;
+
+	TCCR1B |= (1 << WGM13) | (1 << CS10);		// phase correct mode and no prescaling
+	TCCR1A |= (1 << COM1A1) | (1 << COM1B1) | (1 << WGM11);	// set OC1A/OC1B as outputs from right and left motors
+
+	PWM_data_init();
+	Motor_PWM_Enable(0);
+	Set_MAX_Motor_PWM( MAX_PWM );
+	Motor_PWM_Left(0);
+	Motor_PWM_Right(0);
 }
+
 /**
  * Function MotorPWM_Enable enables or disables the motor PWM outputs.
  * @param [bool] enable (true set enable, false set disable)
@@ -80,6 +98,7 @@ void Motor_PWM_Enable( bool enable )
 	if (enable) DDRB |= (1 << DDB5) | (1 << DDB6);
 	else DDRB |= (0 << DDB5) | (0 << DDB6);
 }
+
 /**
  * Function Is_Motor_PWM_Enabled returns if the motor PWM is enabled for output.
  * @param [bool] true if enabled, false if disabled
@@ -89,18 +108,16 @@ bool Is_Motor_PWM_Enabled()
 	if ( bit_is_set(DDRB, DDB5) && bit_is_set(DDRB, DDB6)) return true;
 	else return false;
 }
-/**
+
+/*
  * Function Motor_PWM_Left sets the PWM duty cycle for the left motor.
  * @return [int32_t] The count number.
  */
 void Motor_PWM_Left( int16_t pwm )
 {
- 	union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
-	data.value = pwm;
 	unsigned char sreg = SREG;
 	cli();
-	OCR1AH = data.split.MSB;
-	OCR1AL = data.split.LSB;
+	OCR1B = pwm;
 	sei();
 	SREG = sreg;
 }
@@ -111,12 +128,9 @@ void Motor_PWM_Left( int16_t pwm )
  */
 void Motor_PWM_Right( int16_t pwm )
 {
- 	union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
-	data.value = pwm;
 	unsigned char sreg = SREG;
 	cli();
-	OCR1AH = data.split.MSB;
-	OCR1AL = data.split.LSB;
+	OCR1A = pwm;
 	sei();
 	SREG = sreg;
 }
@@ -128,14 +142,14 @@ void Motor_PWM_Right( int16_t pwm )
  */
 int16_t Get_Motor_PWM_Left()
 {
-	union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
 	unsigned char sreg = SREG;
+	int16_t val;
 	cli();
-	data.split.LSB = OCR1B;
-	data.split.MSB = OCR1B;
+	val = OCR1B;
 	sei();
 	SREG = sreg;
-	return data.value;
+    if (bit_is_set(PORTB, PORTB2)) val = -val;
+	return val;
 }
 
 /**
@@ -145,14 +159,14 @@ int16_t Get_Motor_PWM_Left()
  */
 int16_t Get_Motor_PWM_Right()
 {
-	union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
 	unsigned char sreg = SREG;
+	int16_t val;
 	cli();
-	data.split.LSB = OCR1A;
-	data.split.MSB = OCR1A;
+	val = OCR1A;
 	sei();
 	SREG = sreg;
-	return data.value;
+    if (bit_is_set(PORTB, PORTB1)) val = -val;
+	return val;
 }
 
 /**
@@ -161,14 +175,13 @@ int16_t Get_Motor_PWM_Right()
  */
 uint16_t Get_MAX_Motor_PWM()
 {
-	union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
 	unsigned char sreg = SREG;
+	int16_t val;
 	cli();
-	data.split.LSB = ICR1L;
-	data.split.MSB = ICR1H;
+	val = ICR1;
 	sei();
 	SREG = sreg;
-	return data.value;
+	return val;
 }
 
 /**
@@ -178,13 +191,9 @@ uint16_t Get_MAX_Motor_PWM()
  */
 void Set_MAX_Motor_PWM( uint16_t MAX_PWM )
 {
-	union { struct {uint8_t LSB; uint8_t MSB; } split; uint16_t value;} data;
 	unsigned char sreg = SREG;
 	cli();
-	ICR1H = data.split.MSB;
-	ICR1L = data.split.LSB;
+	ICR1 = MAX_PWM;
 	sei();
 	SREG = sreg;
 }
-
-#endif
