@@ -47,11 +47,21 @@ from tkinter import filedialog
 from tkinter import simpledialog
 import struct
 
+import game_pad_interface as gpi
+
+import time   # FOR TIME STAMPING DATA
+
+
 
 class GuiSetup:
     def __init__(self):
         self.gui = Tk()
         self.gui.title("MEGN540 Serial Monitor & Plotter")
+        
+        self.game_pad = gpi.MEGN540_GamePadInterface()
+        self.game_pad.connect()
+        self.game_pad_timeout = 0.5
+        self.game_pad_last_send_info = [None, 0 ,0]
         
         # Contact Info
         self.contact = Label(text="apetruska@mines.com").place(x=250, y=437)
@@ -270,8 +280,12 @@ class GuiSetup:
                 
         if self.serial_object.isConnected():
             self.button_connect.configure(text="Disconnect")
+            self.game_pad.add_callback(self.GamePadCallback)
+
         else:
             self.button_connect.configure(text=" Connect ")
+            self.game_pad.rm_callback(self.GamePadCallback)
+
 
 
     def debug_check_gui(self):
@@ -332,6 +346,11 @@ class GuiSetup:
         if (self.plotObject is not None) and not self.plotObject.isOk():
             self.plotWindowOpenClose() #will disconnect the grap and call close and change buttons etc
             
+        # TODO:  Add enable gamepad button/call?    
+        if( self.game_pad_last_send_info[0] and (time.perf_counter()-self.game_pad_last_send_info[0]) > self.game_pad_timeout/2 and self.data_entry[0].get() is 'V' ):
+            self.GamePadCallback(self.game_pad_last_send_info[1],self.game_pad_last_send_info[2]) # resend command before timeout
+            
+            
         self.update_job = self.gui.after(int(1000/self.text_box_update_Hz),self.update_gui)
         
             
@@ -339,6 +358,8 @@ class GuiSetup:
         """ This function is for some internal cleanup operations on closeing to make sure
         we leave the serialport in a good state as well as save data (if we want to) and terminate
         threads as necessary  etc. """
+        
+        self.game_pad.disconnect()
         
         if self.auto_send_job is not None:
             self.gui.after_cancel(self.auto_send_job)
@@ -349,16 +370,17 @@ class GuiSetup:
         
         if self.plotObject:
             self.plotObject.close()
-                           
+                                       
         if self.update_job is not None:
             self.gui.after_cancel(self.update_job )
             self.update_job = None
+    
             
         if self.gui:
             self.gui.quit()
             self.gui.destroy()
         self.gui = None
-            
+                    
     def send(self):
         """This function is for sending data from the computer to the host controller.
         The value entered in the the entry box is pushed to the UART. The data can be of any format, since
@@ -470,6 +492,27 @@ class GuiSetup:
 
     def Callback(self, function):
         self.callbackfunction.append(function)
+        
+    def GamePadCallback(self, lin_vel, ang_vel):
+        #print("Lin: " + str(lin_vel) + " Ang: " + str(ang_vel) )
+        if self.serial_object.isConnected():
+            self.combobox_out[0].current(self.out_selection.index("c"))
+            self.combobox_out[1].current(self.out_selection.index("f"))
+            self.combobox_out[2].current(self.out_selection.index("f"))
+            self.combobox_out[3].current(self.out_selection.index("f"))
+            
+            for e in self.data_entry:
+                e.delete(0,'end')
+            
+            self.data_entry[0].insert(END,"V")
+            self.data_entry[1].insert(END,str(lin_vel))
+            self.data_entry[2].insert(END,str(ang_vel))
+            self.data_entry[3].insert(END,0.5) #Half second timeout
+
+            self.game_pad_last_send_info = [ time.perf_counter(), lin_vel, ang_vel]
+            
+            self.send()
+            
 
     def main(self):
         # mainloop
