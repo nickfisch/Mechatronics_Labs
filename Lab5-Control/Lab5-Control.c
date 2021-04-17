@@ -1,55 +1,14 @@
-/*
-         MEGN540 Mechatronics Lab
-    Copyright (C) Andrew Petruska, 2021.
-       apetruska [at] mines [dot] edu
-          www.mechanical.mines.edu
-*/
-
-/*
-    Copyright (c) 2021 Andrew Petruska at Colorado School of Mines
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
-
-*/
-
 #include <stdbool.h>
 #include <float.h>
 #include <stdlib.h>
 
 #include "../c_lib/SerialIO.h"
 #include "../c_lib/Timing.h"
-#include "../c_lib/MEGN540_MessageHandeling.h"
 #include "../c_lib/Encoder.h"
-#include "../c_lib/MotorPWM.h"
-#include "../c_lib/Filter.h"
 #include "../c_lib/Battery_Monitor.h"
-
-
-//#include "../c_lib/Controller.h"
-//include "../c_lib/Task_Scheduler.h" 
-
-
-//void InitializeSystem()
-//{
-//
-//    
-//}
+#include "../c_lib/Filter.h"
+#include "../c_lib/MEGN540_MessageHandeling.h"
+#include "../c_lib/MotorPWM.h"
 
 // timer for power off
 Time_t Pwr_check;
@@ -83,10 +42,6 @@ void Set_Motor_Directions(int16_t left, int16_t right);
 void Start_PWM_Timer(bool timer); 
 
 void Check_PWM_Timer_and_PWR();
-
-/** Main program entry point. This routine configures the hardware required by the application, then
- *  enters a loop to run the application tasks in sequence.
- */
 
 /** Main program entry point. This routine configures the hardware required by the application, then
  *  enters a loop to run the application tasks in sequence.
@@ -383,4 +338,3 @@ void Check_PWM_Timer_and_PWR()
 	    PWM_timer_active = false;
 	}
 }
-

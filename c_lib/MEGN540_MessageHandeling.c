@@ -85,7 +85,9 @@ void Message_Handling_Init()
     MSG_FLAG_Init( &mf_battery_voltage );
     MSG_FLAG_Init( &mf_set_PWM ); 
     MSG_FLAG_Init( &mf_stop_PWM );
-    MSG_FLAG_Init( &mf_send_sys ); 
+    MSG_FLAG_Init( &mf_send_sys );
+    MSG_FLAG_Init( &mf_distance );
+    MSG_FLAG_Init( &mf_velocity ); 
     return;
 }
 
@@ -251,6 +253,34 @@ void Message_Handling_Task()
    		            return;
    		        }
    		        mf_send_sys.duration = dur;
+            }
+            break;
+        case 'd':
+            if( usb_msg_length() >= MEGN540_Message_Len('d') )
+            {
+                usb_msg_get();
+		        mf_distance.active = true;
+            }
+            break;
+        case 'D':
+            if( usb_msg_length() >= MEGN540_Message_Len('D') )
+            {
+                usb_msg_get();
+		        mf_distance.active = true;
+            }
+            break;
+        case 'v':
+            if( usb_msg_length() >= MEGN540_Message_Len('v') )
+            {
+                usb_msg_get();
+		        mf_velocity.active = true;
+            }
+            break;
+        case 'V':
+            if( usb_msg_length() >= MEGN540_Message_Len('V') )
+            {
+                usb_msg_get();
+		        mf_velocity.active = true;
             }
             break;
         default:

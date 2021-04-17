@@ -51,6 +51,8 @@ MSG_FLAG_t mf_battery_voltage; 	/// Indicates if the system should send Battery 
 MSG_FLAG_t mf_set_PWM; 		/// Indicates if the system should set the PWM
 MSG_FLAG_t mf_stop_PWM; 	/// Indicates if the system should stop PWM and disable the motor
 MSG_FLAG_t mf_send_sys; 	/// Indicates if the system should send system identification
+MSG_FLAG_t mf_distance; 	/// Indicates if the system should drive a distance
+MSG_FLAG_t mf_velocity; 	/// Indicates if the system should speed up to a velocity
 
 /**
  * Function MSG_FLAG_Execute indicates if the action associated with the message flag should be executed
