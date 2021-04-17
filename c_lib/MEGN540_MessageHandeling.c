@@ -193,12 +193,6 @@ void Message_Handling_Task()
             if( usb_msg_length() >= MEGN540_Message_Len('p') )
             {
                 usb_msg_get();
-<<<<<<< HEAD
-                //mf_set_PWM
-            }
-            break;
-=======
-
 		        // read left and right PWM values into PWM_data 
 		        usb_msg_read_into(&PWM_data.left_PWM, sizeof(PWM_data.left_PWM));
 		        usb_msg_read_into(&PWM_data.right_PWM, sizeof(PWM_data.right_PWM));
@@ -207,7 +201,6 @@ void Message_Handling_Task()
 		        mf_set_PWM.active = true;	
 	        }
 	        break;
->>>>>>> 348700fec84ccb3add43dc132e5ed15ea177fced
         case 'P':
             if( usb_msg_length() >= MEGN540_Message_Len('P') )
             {
@@ -226,34 +219,22 @@ void Message_Handling_Task()
             if( usb_msg_length() >= MEGN540_Message_Len('s') )
             {
                 usb_msg_get();
-<<<<<<< HEAD
-                mf_stop_PWM.active = true;
-=======
 		        mf_stop_PWM.active = true;
->>>>>>> 348700fec84ccb3add43dc132e5ed15ea177fced
             }
             break;
         case 'S':
             if( usb_msg_length() >= MEGN540_Message_Len('S') )
             {
                 usb_msg_get();
-<<<<<<< HEAD
                 mf_stop_PWM.active = true;
-=======
-		mf_stop_PWM.active = true;
->>>>>>> 348700fec84ccb3add43dc132e5ed15ea177fced
             }
             break;
         case 'q':
             if( usb_msg_length() >= MEGN540_Message_Len('q') )
             {
                 usb_msg_get();
-<<<<<<< HEAD
-                //mf_send_sys
-=======
 		        mf_send_sys.active = true;
 		        mf_send_sys.duration = -1;
->>>>>>> 348700fec84ccb3add43dc132e5ed15ea177fced
             }
             break;
         case 'Q':

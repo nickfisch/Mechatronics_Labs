@@ -219,11 +219,6 @@ int main(void)
         if ( MSG_FLAG_Execute( &mf_set_PWM)) {
             //set variables for future calls
             mf_set_PWM.last_trigger_time = GetTime();
-<<<<<<< HEAD
-            if (mf_set_PWM.duration <= 0){
-                mf_set_PWM.active = false;
-            }
-=======
 	    
 	    // check for time limit (PWM_data.time_limit true if 'P' was called)
 	    if (Filter_Last_Output(&Battery_Filter) < 1) {		// every 5 seconds send power warning and disable motor
@@ -249,7 +244,6 @@ int main(void)
 		    PWM_data_init();
 	    }
 	    else Motor_PWM_Enable(0);
->>>>>>> 348700fec84ccb3add43dc132e5ed15ea177fced
         }
 
 	    Check_PWM_Timer_and_PWR();
