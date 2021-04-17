@@ -220,30 +220,30 @@ int main(void)
             //set variables for future calls
             mf_set_PWM.last_trigger_time = GetTime();
 	    
-	    // check for time limit (PWM_data.time_limit true if 'P' was called)
-	    if (Filter_Last_Output(&Battery_Filter) < 1) {		// every 5 seconds send power warning and disable motor
-	    	Motor_PWM_Enable(0);
-	    	if (SecondsSince(&Pwr_check) > 5) { 		// power off warning
-	    		Pwr_check = GetTime();
-	    		usb_send_msg("c9s", '!', &Pwr_msg, sizeof(Pwr_msg));
-			mf_set_PWM.active = false;
-	    	}
-	    }	    
-	    else if (Filter_Last_Output(&Battery_Filter) > 4.75) 		// if voltage is high enough for Motors
-	    {
-	    	Motor_PWM_Enable(1);
+	        // check for time limit (PWM_data.time_limit true if 'P' was called)
+	        if (Filter_Last_Output(&Battery_Filter) < 1) {		// every 5 seconds send power warning and disable motor
+	        	Motor_PWM_Enable(0);
+	        	if (SecondsSince(&Pwr_check) > 5) { 		// power off warning
+	        		Pwr_check = GetTime();
+	        		usb_send_msg("c9s", '!', &Pwr_msg, sizeof(Pwr_msg));
+		    	mf_set_PWM.active = false;
+	        	}
+	        }	    
+	        else if (Filter_Last_Output(&Battery_Filter) > 4.75) 		// if voltage is high enough for Motors
+	        {
+	        	Motor_PWM_Enable(1);
 
-		    Set_Motor_Directions(PWM_data.left_PWM, PWM_data.right_PWM);
-	    	
-	    	Motor_PWM_Left(abs(PWM_data.left_PWM));		// set the left motor pwm
-	    	Motor_PWM_Right(abs(PWM_data.right_PWM));	// set the right motor PWM
+		        Set_Motor_Directions(PWM_data.left_PWM, PWM_data.right_PWM);
+	        	
+	        	Motor_PWM_Left(abs(PWM_data.left_PWM));		// set the left motor pwm
+	        	Motor_PWM_Right(abs(PWM_data.right_PWM));	// set the right motor PWM
 
-		    Start_PWM_Timer(PWM_data.time_limit);		// start timer if needed (P call)
+		        Start_PWM_Timer(PWM_data.time_limit);		// start timer if needed (P call)
 
-		    mf_set_PWM.active = false;
-		    PWM_data_init();
-	    }
-	    else Motor_PWM_Enable(0);
+		        mf_set_PWM.active = false;
+		        PWM_data_init();
+	        }
+	        else Motor_PWM_Enable(0);
         }
 
 	    Check_PWM_Timer_and_PWR();

@@ -34,6 +34,7 @@ struct __attribute__((__packed__)) { float time; int16_t PWM_L; int16_t PWM_R; i
 // info used to send sysData  -  t_interval in milliseconds
 struct __attribute__((__packed__)) { float t_interval; Time_t start_time; Time_t last_send_time; bool active; } sys_send_info;
 
+DEFINE PWM_TOP = 380;
 
 void Set_Send_sysData();
 
@@ -54,7 +55,7 @@ int main(void)
     USB_SetupHardware();
     GlobalInterruptEnable();
     Message_Handling_Init(); // initialize message handling
-    Motor_PWM_Init(380);	// initiate the PWM top to 380, for a frequency of 21 kHz
+    Motor_PWM_Init(PWM_TOP);
 
     // variable needed for timing the while loop
     Time_t startTime;
@@ -103,7 +104,7 @@ int main(void)
             USB_SetupHardware();
             GlobalInterruptEnable();
             Message_Handling_Init(); 
-    	    Motor_PWM_Init(380);	// initiate the PWM top to 380, for a frequency of 21 kHz
+    	    Motor_PWM_Init(PWM_TOP);	// initiate the PWM top to 380, for a frequency of 21 kHz
         }   
         
         // checks send time message flag
