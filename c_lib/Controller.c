@@ -41,8 +41,9 @@ float Controller_Update( Controller_t* p_cont, float measurement, float dt )
 
     if (p_cont->target_vel > 0) target = measurement + dt*p_cont->target_vel;
     else target = p_cont->target_pos;
+    float ret_val = p_cont->kp * (target - filter_val);
     last_control_val = ret_val;
-    float ret_val = p_cont->kp*(target - val);
+    return ret_val;
 }
 
 /**
@@ -59,7 +60,7 @@ float Controller_Last( Controller_t* p_cont)
  */
 void Controller_SetTo(Controller_t* p_cont, float measurement )
 {
-    Filter_SetTo(&p_cont->controller, measurment);
+    Filter_SetTo(&p_cont->controller, measurement);
 }
 
 /**
@@ -68,5 +69,5 @@ void Controller_SetTo(Controller_t* p_cont, float measurement )
  */
 void Controller_ShiftBy(Controller_t* p_cont, float measurement )
 {
-    Filter_ShiftBy(&p_cont->controller, measurment);
+    Filter_ShiftBy(&p_cont->controller, measurement);
 }

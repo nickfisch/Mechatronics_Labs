@@ -31,6 +31,8 @@ SRC = $(TARGET).c       \
 	${MEGN_C_LIB_PATH}/Controller.c\
 	$(MEGN_C_LIB_PATH)/USB_Config/Descriptors.c       \
 	$(LUFA_SRC_USB)
+#	${MEGN_C_LIB_PATH}/Link_List.c\
+#	${MEGN_C_LIB_PATH}/Task_Scheduler.c\
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC =
