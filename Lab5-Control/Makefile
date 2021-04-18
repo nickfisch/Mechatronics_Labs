@@ -23,8 +23,6 @@ SRC = $(TARGET).c       \
 	$(MEGN_C_LIB_PATH)/SerialIO.c			\
 	$(MEGN_C_LIB_PATH)/Ring_Buffer.c		\
 	$(MEGN_C_LIB_PATH)/MEGN540_MessageHandeling.c \
-#	${MEGN_C_LIB_PATH}/Link_List.c\
-#	${MEGN_C_LIB_PATH}/Task_Scheduler.c\
 	$(MEGN_C_LIB_PATH)/Timing.c				\
 	${MEGN_C_LIB_PATH}/Encoder.c \
 	${MEGN_C_LIB_PATH}/MotorPWM.c\

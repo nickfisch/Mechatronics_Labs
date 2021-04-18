@@ -34,7 +34,7 @@ struct __attribute__((__packed__)) { float time; int16_t PWM_L; int16_t PWM_R; i
 // info used to send sysData  -  t_interval in milliseconds
 struct __attribute__((__packed__)) { float t_interval; Time_t start_time; Time_t last_send_time; bool active; } sys_send_info;
 
-DEFINE PWM_TOP = 380;
+#define PWM_TOP 380
 
 void Set_Send_sysData();
 
@@ -43,6 +43,17 @@ void Set_Motor_Directions(int16_t left, int16_t right);
 void Start_PWM_Timer(bool timer); 
 
 void Check_PWM_Timer_and_PWR();
+
+// left side controller values
+float KpLeft = 0.5468;
+float leftNumerator[] = {1, -0.985319268716};     
+float leftDenominator[] = {3.065964279734, -3.05128354845}; // last 'actual' value: 7.13251396854483e-52
+
+// right side controller values
+float KpRight = 0.5474;
+float rightNumerator[] = {1, -0.985287739004};     
+float rightDenominator[] = {3.085342484782, -3.070630223786}; // last 'actual' value: 7.13251396854483e-52
+
 
 /** Main program entry point. This routine configures the hardware required by the application, then
  *  enters a loop to run the application tasks in sequence.
@@ -339,3 +350,4 @@ void Check_PWM_Timer_and_PWR()
 	    PWM_timer_active = false;
 	}
 }
+
