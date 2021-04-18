@@ -10,6 +10,9 @@
 #include "../c_lib/MEGN540_MessageHandeling.h"
 #include "../c_lib/MotorPWM.h"
 
+
+#define PWM_TOP 380
+
 // timer for power off
 Time_t Pwr_check;
 
@@ -33,8 +36,6 @@ float denominator[] = {1, -3.44897255468215e-11, 3.01641584463356e-22, 6.5385109
 struct __attribute__((__packed__)) { float time; int16_t PWM_L; int16_t PWM_R; int16_t Encoder_L; int16_t Encoder_R;} sysData;
 // info used to send sysData  -  t_interval in milliseconds
 struct __attribute__((__packed__)) { float t_interval; Time_t start_time; Time_t last_send_time; bool active; } sys_send_info;
-
-#define PWM_TOP 380
 
 void Set_Send_sysData();
 
@@ -289,6 +290,18 @@ int main(void)
         // checks if sys_send_info is active - second time
         if (sys_send_info.active && (SecondsSince(&sys_send_info.last_send_time) >= (sys_send_info.t_interval/1000))) {
             Set_Send_sysData();
+        }
+
+        // check position mode
+        if( MSG_FLAG_Execute( &mf_distance ) )
+        {
+
+        }
+
+        // check velocity mode
+        if( MSG_FLAG_Execute( &mf_velocity ))
+        {
+
         }
 
    }
